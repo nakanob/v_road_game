@@ -8,7 +8,7 @@ import { RoadGenerator } from "../world/RoadGenerator.js";
 import { RiverGenerator } from "../world/RiverGenerator.js";
 import { Dust } from "../effects/Dust.js";
 import { TireTrack } from "../effects/TireTrack.js";
-
+import { Smoke } from "../effects/Smoke.js";
 
 
 
@@ -93,6 +93,14 @@ export class SceneManager {
 
         this.register(
             this.tireTrack
+        );
+        this.smoke = new Smoke(
+            this,
+            this.vehicle
+        );
+
+        this.register(
+            this.smoke
         );
     }
 
