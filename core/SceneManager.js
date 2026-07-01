@@ -7,6 +7,13 @@ import { FollowCamera } from "../vehicle/FollowCamera.js";
 import { RoadGenerator } from "../world/RoadGenerator.js";
 import { RiverGenerator } from "../world/RiverGenerator.js";
 import { Dust } from "../effects/Dust.js";
+import { TireTrack } from "../effects/TireTrack.js";
+
+
+
+
+
+
 
 export class SceneManager {
 
