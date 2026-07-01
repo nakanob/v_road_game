@@ -86,6 +86,14 @@ export class SceneManager {
         this.register(
             this.dust
         );
+        this.tireTrack = new TireTrack(
+            this,
+            this.vehicle
+        );
+
+        this.register(
+            this.tireTrack
+        );
     }
 
     createLights() {
