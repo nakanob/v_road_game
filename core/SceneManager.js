@@ -1,5 +1,6 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
 import { Terrain } from "../world/Terrain.js";
+import { TreeGenerator } from "../world/TreeGenerator.js";
 
 export class SceneManager {
 
