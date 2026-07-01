@@ -4,6 +4,9 @@ import { TreeGenerator } from "../world/TreeGenerator.js";
 import { RockGenerator } from "../world/RockGenerator.js";
 import { Vehicle } from "../vehicle/Vehicle.js";
 import { FollowCamera } from "../vehicle/FollowCamera.js";
+import { RoadGenerator } from "../world/RoadGenerator.js";
+
+
 
 export class SceneManager {
 
