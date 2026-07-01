@@ -5,7 +5,7 @@ import { RockGenerator } from "../world/RockGenerator.js";
 import { Vehicle } from "../vehicle/Vehicle.js";
 import { FollowCamera } from "../vehicle/FollowCamera.js";
 import { RoadGenerator } from "../world/RoadGenerator.js";
-
+import { RiverGenerator } from "../world/RiverGenerator.js";
 
 
 export class SceneManager {
@@ -68,7 +68,7 @@ export class SceneManager {
             this.followCamera
         );
         this.roadGenerator = new RoadGenerator(this);
-
+        this.riverGenerator = new RiverGenerator(this);
         
     }
 
