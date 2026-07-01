@@ -3,7 +3,7 @@ import { Terrain } from "../world/Terrain.js";
 import { TreeGenerator } from "../world/TreeGenerator.js";
 import { RockGenerator } from "../world/RockGenerator.js";
 import { Vehicle } from "../vehicle/Vehicle.js";
-
+import { FollowCamera } from "../vehicle/FollowCamera.js";
 
 export class SceneManager {
 
@@ -54,7 +54,14 @@ export class SceneManager {
         this.rockGenerator = new RockGenerator(this);
         this.vehicle = new Vehicle(this);
         this.register(this.vehicle);
+        this.followCamera = new FollowCamera(
+            this,
+            this.vehicle
+        );
 
+        this.register(
+            this.followCamera
+        );
 
 
         
