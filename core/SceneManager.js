@@ -45,6 +45,7 @@ export class SceneManager {
             "resize",
             this.onResize.bind(this)
         );
+        this.terrain = new Terrain(this);
     }
 
     createLights() {
