@@ -2,7 +2,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.mod
 import { Terrain } from "../world/Terrain.js";
 import { TreeGenerator } from "../world/TreeGenerator.js";
 import { RockGenerator } from "../world/RockGenerator.js";
-
+import { Vehicle } from "../vehicle/Vehicle.js";
 
 
 export class SceneManager {
