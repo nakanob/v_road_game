@@ -67,6 +67,16 @@ export class Vehicle {
 
                 this.scene.add(this.model);
 
+                // ↓↓↓ ここから追加 ↓↓↓
+
+                this.position.set(
+                    0,
+                    this.terrain.getHeight(0, 0),
+                    0
+                );
+
+                // ↑↑↑ ここまで追加 ↑↑↑
+
                 this.updateTransform();
 
             },
