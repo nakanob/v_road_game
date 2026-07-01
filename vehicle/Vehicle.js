@@ -5,7 +5,8 @@ import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.179/examples/js
 
 import { InputManager } from "./InputManager.js";
 import { VehicleController } from "./VehicleController.js";
-
+this.controller =
+    new VehicleController(this);
 
 
 export class Vehicle {
