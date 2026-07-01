@@ -4,6 +4,9 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.mod
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.179/examples/jsm/loaders/GLTFLoader.js";
 
 import { InputManager } from "./InputManager.js";
+import { VehicleController } from "./VehicleController.js";
+
+
 
 export class Vehicle {
 
