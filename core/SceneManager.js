@@ -67,7 +67,7 @@ export class SceneManager {
         this.register(
             this.followCamera
         );
-
+        this.roadGenerator = new RoadGenerator(this);
 
         
     }
