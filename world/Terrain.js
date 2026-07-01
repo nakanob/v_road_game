@@ -1,4 +1,5 @@
 // world/Terrain.js
+// 修正
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
 
@@ -6,19 +7,17 @@ import { createNoise2D } from "https://cdn.jsdelivr.net/npm/simplex-noise@4.0.3/
 
 import { NoiseAdapter } from "./NoiseAdapter.js";
 import { TerrainGenerator } from "./TerrainGenerator.js";
+import { TerrainMaterial } from "./TerrainMaterial.js";
 
 export class Terrain {
 
     constructor(sceneManager) {
 
         this.sceneManager = sceneManager;
-
         this.scene = sceneManager.scene;
 
         this.mesh = null;
-
         this.geometry = null;
-
         this.material = null;
 
         this.generator = null;
@@ -45,30 +44,19 @@ export class Terrain {
             this.generator.createGeometry();
 
         this.material =
-            new THREE.MeshStandardMaterial({
-
-                color: 0x7b7b52,
-
-                roughness: 1.0,
-
-                metalness: 0.0,
-
-                flatShading: false
-
-            });
+            new TerrainMaterial();
 
         this.mesh = new THREE.Mesh(
 
             this.geometry,
 
-            this.material
+            this.material.getMaterial()
 
         );
 
         this.mesh.name = "Terrain";
 
         this.mesh.receiveShadow = true;
-
         this.mesh.castShadow = false;
 
         this.scene.add(this.mesh);
@@ -83,23 +71,11 @@ export class Terrain {
 
     dispose() {
 
-        if (this.mesh) {
+        this.scene.remove(this.mesh);
 
-            this.scene.remove(this.mesh);
+        this.geometry.dispose();
 
-        }
-
-        if (this.geometry) {
-
-            this.geometry.dispose();
-
-        }
-
-        if (this.material) {
-
-            this.material.dispose();
-
-        }
+        this.material.dispose();
 
     }
 
