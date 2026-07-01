@@ -51,6 +51,7 @@ export class SceneManager {
         );
         this.terrain = new Terrain(this);
         this.treeGenerator = new TreeGenerator(this);
+        this.rockGenerator = new RockGenerator(this);
     }
 
     createLights() {
