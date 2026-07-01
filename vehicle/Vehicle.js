@@ -85,25 +85,69 @@ export class Vehicle {
 
     update(delta) {
 
-        if (!this.model) return;
-
-        this.controller.update(delta);
-
-        this.updateTransform();
-
-    }
-
-    updateTransform() {
-
-        this.model.position.copy(
-
-            this.position
+        if (!this.vehicle.model) return;
+    
+        const forward = new THREE.Vector3(
+    
+            Math.sin(this.vehicle.direction),
+    
+            0,
+    
+            Math.cos(this.vehicle.direction)
 
         );
 
-        this.model.rotation.y =
+        const desiredPosition =
+            this.vehicle.position.clone();
 
-            this.direction;
+        desiredPosition.add(
+
+            forward.clone().multiplyScalar(
+
+                this.offset.z
+
+            )
+
+        );
+
+        desiredPosition.y += this.offset.y;
+
+        this.camera.position.lerp(
+
+            desiredPosition,
+
+            this.followSpeed * delta
+
+        );
+
+        this.lookTarget.copy(
+
+            this.vehicle.position
+
+        );
+
+        this.lookTarget.y +=
+            this.targetOffset.y;
+
+        this.camera.lookAt(
+            this.lookTarget
+        );
+
+    }
+
+     updateTransform() {
+
+        if (!this.model) return;
+
+        this.model.position.copy(
+            this.position
+        );
+
+        this.model.rotation.set(
+            0,
+            this.direction,
+            0
+        );
 
     }
 
