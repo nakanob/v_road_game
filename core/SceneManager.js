@@ -101,6 +101,12 @@ export class SceneManager {
         this.sunLight.shadow.camera.far = 1500;
 
         this.scene.add(this.sunLight);
+        const axesHelper = new THREE.AxesHelper(5);
+
+        this.scene.add(
+            axesHelper
+        );
+        
     }
 
     add(object) {
