@@ -15,7 +15,7 @@ import { MiniMap } from "../ui/MiniMap.js";
 import { AssetLoader } from "./AssetLoader.js";
 import { ChunkManager } from "../world/ChunkManager.js";
 import { Sky } from "../world/Sky.js";
-
+import { Sun } from "../world/Sun.js";
 
 
 export class SceneManager {
@@ -59,7 +59,7 @@ export class SceneManager {
         this.updatables = [];
 
         this.createLights();
-        this.sky = new Sky(this);
+
 
         window.addEventListener(
             "resize",
@@ -140,7 +140,7 @@ export class SceneManager {
     }
 
     createLights() {
-
+        this.sky = new Sky(this);
         this.ambientLight = new THREE.AmbientLight(
             0xffffff,
             1.2
@@ -178,7 +178,10 @@ export class SceneManager {
         this.scene.add(
             axesHelper
         );
-        
+
+        this.scene.add(
+            this.sunLight.target
+        );
     }
 
     add(object) {
