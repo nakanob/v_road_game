@@ -1,7 +1,8 @@
 // vehicle/Vehicle.js
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.179/examples/jsm/loaders/GLTFLoader.js";
+
+//import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.179/examples/jsm/loaders/GLTFLoader.js";
 
 import { InputManager } from "./InputManager.js";
 import { VehicleController } from "./VehicleController.js";
@@ -44,52 +45,67 @@ export class Vehicle {
 
     }
 
-    load() {
+    async load() {
 
-        this.loader.load(
+        try {
 
-            "./models/vehicles/car.glb",
+            let model =
+            this.assetLoader.getModel(
+                "vehicle"
+            );
 
-            (gltf) => {
+            if (!model) {
 
-                this.model = gltf.scene;
+                await this.assetLoader.loadGLB(
 
-                this.model.traverse((child) => {
+                    "vehicle",
 
-                    if (child.isMesh) {
+                    "./models/vehicles/car.glb"
 
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-
-                    }
-
-                });
-
-                this.scene.add(this.model);
-
-                // ↓↓↓ ここから追加 ↓↓↓
-
-                this.position.set(
-                    0,
-                    this.terrain.getHeight(0, 0),
-                    0
                 );
 
-                // ↑↑↑ ここまで追加 ↑↑↑
-
-                this.updateTransform();
-
-            },
-
-            undefined,
-
-            (error) => {
-
-                console.error(error);
+                model =
+                    this.assetLoader.getModel(
+                        "vehicle"
+                );
 
             }
 
-        );
+            this.model = model;
+
+            this.model.traverse((child) => {
+
+                if (child.isMesh) {
+
+                    child.castShadow = true;
+
+                    child.receiveShadow = true;
+
+                }
+
+            });
+
+            this.scene.add(this.model);
+
+            this.position.set(
+
+                0,
+
+                this.terrain.getHeight(0, 0),
+
+                0
+
+            );
+
+            this.updateTransform();
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+        }
 
     }
 
