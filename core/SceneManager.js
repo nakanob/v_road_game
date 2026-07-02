@@ -13,6 +13,9 @@ import { HUD } from "../ui/HUD.js";
 import { SpeedMeter } from "../ui/SpeedMeter.js";
 import { MiniMap } from "../ui/MiniMap.js";
 import { AssetLoader } from "./AssetLoader.js";
+import { ChunkManager } from "../world/ChunkManager.js";
+
+
 
 
 export class SceneManager {
