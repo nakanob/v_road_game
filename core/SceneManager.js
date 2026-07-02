@@ -19,7 +19,7 @@ import { Sun } from "../world/Sun.js";
 import { DayNightCycle } from "../world/DayNightCycle.js";
 import { GrassGenerator } from "../world/GrassGenerator.js";
 import { CollisionManager } from "../world/CollisionManager.js";
-
+import { LoadingScreen } from "../ui/LoadingScreen.js";
 
 
 export class SceneManager {
@@ -135,7 +135,34 @@ export class SceneManager {
             this.miniMap
         );
         this.assetLoader = new AssetLoader();
+        // core/SceneManager.js
+        // constructor() の assetLoader 作成直後へ追加
 
+        this.loadingScreen =
+
+        new LoadingScreen();
+
+        this.assetLoader.onProgress(
+
+            (percent) => {
+
+                this.loadingScreen.setProgress(
+
+                    percent
+
+                );
+
+                if (percent >= 100) {
+
+                    this.loadingScreen.hide();
+
+                }
+
+            }
+
+        );
+
+        
         this.chunkManager = new ChunkManager(this);
 
         this.register(
