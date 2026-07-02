@@ -6,6 +6,10 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.mod
 
 import { InputManager } from "./InputManager.js";
 import { VehicleController } from "./VehicleController.js";
+import { Suspension } from "./Suspension.js";
+
+
+
 this.controller =
     new VehicleController(this);
 
