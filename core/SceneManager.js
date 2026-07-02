@@ -27,6 +27,8 @@ import { Snow } from "../weather/Snow.js";
 import { Fog } from "../weather/Fog.js";
 import { WeatherManager } from "../weather/WeatherManager.js";
 import { Water } from "../world/Water.js";
+import { Bridge } from "../world/Bridge.js";
+
 
 
 export class SceneManager {
@@ -212,6 +214,10 @@ export class SceneManager {
         this.register(
             this.water
         );
+        this.bridge = new Bridge(this);
+
+
+        
     }
 
     createLights() {
