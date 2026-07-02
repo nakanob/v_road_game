@@ -14,7 +14,7 @@ import { SpeedMeter } from "../ui/SpeedMeter.js";
 import { MiniMap } from "../ui/MiniMap.js";
 import { AssetLoader } from "./AssetLoader.js";
 import { ChunkManager } from "../world/ChunkManager.js";
-
+import { Sky } from "../world/Sky.js";
 
 
 
@@ -59,6 +59,7 @@ export class SceneManager {
         this.updatables = [];
 
         this.createLights();
+        this.sky = new Sky(this);
 
         window.addEventListener(
             "resize",
