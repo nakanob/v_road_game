@@ -22,6 +22,12 @@ export class Game {
 
             new TitleScreen(this);
 
+        this.pauseMenu = new PauseMenu(
+
+        this.gameLoop
+
+);
+
     }
 
     start() {
