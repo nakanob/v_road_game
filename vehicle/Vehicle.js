@@ -46,7 +46,8 @@ export class Vehicle {
         this.steering = THREE.MathUtils.degToRad(90);
 
         this.load();
-
+        this.suspension =
+        new Suspension(this);
     }
 
     async load() {
