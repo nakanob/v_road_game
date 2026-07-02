@@ -3,6 +3,8 @@
 import { SceneManager } from "./SceneManager.js";
 import { GameLoop } from "./GameLoop.js";
 import { TitleScreen } from "../ui/TitleScreen.js";
+import { PauseMenu } from "../ui/PauseMenu.js";
+
 
 export class Game {
 
