@@ -16,6 +16,10 @@ import { AssetLoader } from "./AssetLoader.js";
 import { ChunkManager } from "../world/ChunkManager.js";
 import { Sky } from "../world/Sky.js";
 import { Sun } from "../world/Sun.js";
+import { DayNightCycle } from "../world/DayNightCycle.js";
+
+
+
 
 
 export class SceneManager {
@@ -137,6 +141,14 @@ export class SceneManager {
         this.register(
             this.chunkManager
         );
+        this.dayNightCycle = new DayNightCycle(this);
+
+        this.register(
+            this.dayNightCycle
+        );
+
+
+        
     }
 
     createLights() {
