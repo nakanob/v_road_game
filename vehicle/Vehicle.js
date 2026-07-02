@@ -7,7 +7,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.mod
 import { InputManager } from "./InputManager.js";
 import { VehicleController } from "./VehicleController.js";
 import { Suspension } from "./Suspension.js";
-
+import { WheelAnimator } from "./WheelAnimator.js";
 
 
 this.controller =
@@ -48,6 +48,9 @@ export class Vehicle {
         this.load();
         this.suspension =
         new Suspension(this);
+        
+        this.wheelAnimator =
+        new WheelAnimator(this);
     }
 
     async load() {
@@ -119,6 +122,8 @@ export class Vehicle {
         if (!this.model) return;
 
         this.controller.update(delta);
+        
+        this.wheelAnimator.update(delta);
 
         this.suspension.update(delta);
 
