@@ -26,7 +26,7 @@ import { Rain } from "../weather/Rain.js";
 import { Snow } from "../weather/Snow.js";
 import { Fog } from "../weather/Fog.js";
 import { WeatherManager } from "../weather/WeatherManager.js";
-
+import { Water } from "../world/Water.js";
 
 
 export class SceneManager {
@@ -207,6 +207,11 @@ export class SceneManager {
         this.weatherManager =
 
         new WeatherManager(this);
+        this.water = new Water(this);
+
+        this.register(
+            this.water
+        );
     }
 
     createLights() {
