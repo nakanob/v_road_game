@@ -1,0 +1,130 @@
+// vehicle/WheelAnimator.js
+
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
+
+export class WheelAnimator {
+
+    constructor(vehicle) {
+
+        this.vehicle = vehicle;
+
+        this.wheels = {
+
+            frontLeft: null,
+            frontRight: null,
+            rearLeft: null,
+            rearRight: null
+
+        };
+
+        this.rotation = 0;
+
+        this.findWheels();
+
+    }
+
+    findWheels() {
+
+        if (!this.vehicle.model) return;
+
+        this.vehicle.model.traverse((child) => {
+
+            switch (child.name) {
+
+                case "Wheel_FL":
+                    this.wheels.frontLeft = child;
+                    break;
+
+                case "Wheel_FR":
+                    this.wheels.frontRight = child;
+                    break;
+
+                case "Wheel_RL":
+                    this.wheels.rearLeft = child;
+                    break;
+
+                case "Wheel_RR":
+                    this.wheels.rearRight = child;
+                    break;
+
+            }
+
+        });
+
+    }
+
+    update(delta) {
+
+        if (!this.vehicle.model) return;
+
+        if (!this.wheels.frontLeft) {
+
+            this.findWheels();
+
+            return;
+
+        }
+
+        this.rotation +=
+
+            this.vehicle.speed *
+
+            delta *
+
+            1.8;
+
+        const steer =
+
+            this.vehicle.controller.currentSteering;
+
+        this.updateWheel(
+
+            this.wheels.frontLeft,
+
+            steer
+
+        );
+
+        this.updateWheel(
+
+            this.wheels.frontRight,
+
+            steer
+
+        );
+
+        this.updateWheel(
+
+            this.wheels.rearLeft,
+
+            0
+
+        );
+
+        this.updateWheel(
+
+            this.wheels.rearRight,
+
+            0
+
+        );
+
+    }
+
+    updateWheel(
+
+        wheel,
+
+        steering
+
+    ) {
+
+        if (!wheel) return;
+
+        wheel.rotation.y = steering;
+
+        wheel.rotation.x = this.rotation;
+
+    }
+
+}
