@@ -22,7 +22,7 @@ import { CollisionManager } from "../world/CollisionManager.js";
 import { LoadingScreen } from "../ui/LoadingScreen.js";
 import { PhotoMode } from "../ui/PhotoMode.js";
 import { Wind } from "../weather/Wind.js";
-
+import { Rain } from "../weather/Rain.js";
 
 
 export class SceneManager {
@@ -189,6 +189,11 @@ export class SceneManager {
         this.wind = new Wind(this);
 
         this.register(this.wind);
+        this.rain = new Rain(this);
+
+        this.register(
+            this.rain
+        );
     }
 
     createLights() {
