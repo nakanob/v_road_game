@@ -26,7 +26,51 @@ export class GrassGenerator {
         this.scene.add(this.group);
 
     }
+update(delta) {
 
+    if (!this.sceneManager.wind) return;
+
+    const wind = this.sceneManager.wind;
+
+    const sway =
+
+        Math.sin(
+
+            performance.now() * 0.001 *
+
+            wind.strength
+
+        ) * 0.12;
+
+    for (
+
+        let i = 0;
+
+        i < this.group.children.length;
+
+        i++
+
+    ) {
+
+        const grass =
+
+            this.group.children[i];
+
+        grass.rotation.z =
+
+            sway +
+
+            Math.sin(
+
+                i * 0.35 +
+
+                performance.now() * 0.002
+
+            ) * 0.05;
+
+        }
+
+    }
     create() {
 
         const geometry = new THREE.PlaneGeometry(
