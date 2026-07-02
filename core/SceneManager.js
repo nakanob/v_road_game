@@ -23,6 +23,7 @@ import { LoadingScreen } from "../ui/LoadingScreen.js";
 import { PhotoMode } from "../ui/PhotoMode.js";
 import { Wind } from "../weather/Wind.js";
 import { Rain } from "../weather/Rain.js";
+import { Snow } from "../weather/Snow.js";
 
 
 export class SceneManager {
@@ -193,6 +194,11 @@ export class SceneManager {
 
         this.register(
             this.rain
+        );
+        this.snow = new Snow(this);
+
+        this.register(
+            this.snow
         );
     }
 
