@@ -141,6 +141,11 @@ export class SceneManager {
 
     createLights() {
         this.sky = new Sky(this);
+        this.sun = new Sun(this);
+
+        this.register(
+            this.sun
+        );
         this.ambientLight = new THREE.AmbientLight(
             0xffffff,
             1.2
