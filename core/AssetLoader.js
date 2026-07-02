@@ -13,9 +13,50 @@ export class AssetLoader {
         this.textures = new Map();
         this.models = new Map();
 
+        this.total = 0;
+
+        this.loaded = 0;
+
+        this.callbacks = [];
+
     }
 
+
+
+    onProgress(callback) {
+
+        this.callbacks.push(callback);
+
+    }
+
+    notifyProgress() {
+
+        this.loaded++;
+
+        const percent =
+
+        Math.floor(
+
+            this.loaded /
+
+            this.total *
+
+            100
+
+        );
+
+        for (const callback of this.callbacks) {
+
+            callback(percent);
+
+        }
+
+    }
+
+
+    
     loadTexture(name, url) {
+        this.total++;
 
         return new Promise((resolve, reject) => {
 
@@ -38,7 +79,7 @@ export class AssetLoader {
                         name,
                         texture
                     );
-
+                    this.notifyProgress();
                     resolve(texture);
 
                 },
@@ -54,7 +95,7 @@ export class AssetLoader {
     }
 
     loadGLB(name, url) {
-
+        this.total++;
         return new Promise((resolve, reject) => {
 
             this.gltfLoader.load(
@@ -67,7 +108,7 @@ export class AssetLoader {
                         name,
                         gltf.scene
                     );
-
+                    this.notifyProgress();
                     resolve(gltf.scene);
 
                 },
