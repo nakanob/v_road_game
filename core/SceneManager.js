@@ -17,7 +17,7 @@ import { ChunkManager } from "../world/ChunkManager.js";
 import { Sky } from "../world/Sky.js";
 import { Sun } from "../world/Sun.js";
 import { DayNightCycle } from "../world/DayNightCycle.js";
-
+import { GrassGenerator } from "../world/GrassGenerator.js";
 
 
 
@@ -146,7 +146,7 @@ export class SceneManager {
         this.register(
             this.dayNightCycle
         );
-
+        this.grassGenerator = new GrassGenerator(this);
 
         
     }
