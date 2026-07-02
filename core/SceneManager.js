@@ -18,7 +18,7 @@ import { Sky } from "../world/Sky.js";
 import { Sun } from "../world/Sun.js";
 import { DayNightCycle } from "../world/DayNightCycle.js";
 import { GrassGenerator } from "../world/GrassGenerator.js";
-
+import { CollisionManager } from "../world/CollisionManager.js";
 
 
 
@@ -147,7 +147,12 @@ export class SceneManager {
             this.dayNightCycle
         );
         this.grassGenerator = new GrassGenerator(this);
+        this.collisionManager =
+            new CollisionManager(this);
 
+        this.register(
+            this.collisionManager
+        );
         
     }
 
