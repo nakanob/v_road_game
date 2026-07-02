@@ -131,7 +131,11 @@ export class SceneManager {
         );
         this.assetLoader = new AssetLoader();
 
-        
+        this.chunkManager = new ChunkManager(this);
+
+        this.register(
+            this.chunkManager
+        );
     }
 
     createLights() {
