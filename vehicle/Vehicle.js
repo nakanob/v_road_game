@@ -116,57 +116,17 @@ export class Vehicle {
 
     update(delta) {
 
-        if (!this.vehicle.model) return;
-    
-        const forward = new THREE.Vector3(
-    
-            Math.sin(this.vehicle.direction),
-    
-            0,
-    
-            Math.cos(this.vehicle.direction)
+        if (!this.model) return;
 
-        );
+        this.controller.update(delta);
 
-        const desiredPosition =
-            this.vehicle.position.clone();
+        this.suspension.update(delta);
 
-        desiredPosition.add(
-
-            forward.clone().multiplyScalar(
-
-                this.offset.z
-
-            )
-
-        );
-
-        desiredPosition.y += this.offset.y;
-
-        this.camera.position.lerp(
-
-            desiredPosition,
-
-            this.followSpeed * delta
-
-        );
-
-        this.lookTarget.copy(
-
-            this.vehicle.position
-
-        );
-
-        this.lookTarget.y +=
-            this.targetOffset.y;
-
-        this.camera.lookAt(
-            this.lookTarget
-        );
+        this.updateTransform();
 
     }
 
-     updateTransform() {
+    updateTransform() {
 
         if (!this.model) return;
 
@@ -175,9 +135,13 @@ export class Vehicle {
         );
 
         this.model.rotation.set(
-            0,
+
+            this.suspension.pitch,
+
             this.direction,
-            0
+
+            this.suspension.roll
+
         );
 
     }
