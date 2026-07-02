@@ -201,3 +201,55 @@ canvas {
     transition:.2s;
 
 }
+#title-screen{
+
+    position:fixed;
+
+    inset:0;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:linear-gradient(#5fa8ff,#d9f2ff);
+
+    z-index:99998;
+
+    transition:.5s;
+
+}
+
+#title-logo{
+
+    font-size:64px;
+
+    font-weight:bold;
+
+    color:#fff;
+
+    margin-bottom:50px;
+
+    text-shadow:0 4px 10px rgba(0,0,0,.35);
+
+}
+
+#start-button{
+
+    width:240px;
+
+    height:70px;
+
+    font-size:28px;
+
+    cursor:pointer;
+
+    border:none;
+
+    border-radius:12px;
+
+}
+
