@@ -24,7 +24,7 @@ import { PhotoMode } from "../ui/PhotoMode.js";
 import { Wind } from "../weather/Wind.js";
 import { Rain } from "../weather/Rain.js";
 import { Snow } from "../weather/Snow.js";
-
+import { Fog } from "../weather/Fog.js";
 
 export class SceneManager {
 
@@ -200,6 +200,7 @@ export class SceneManager {
         this.register(
             this.snow
         );
+        this.fog = new Fog(this);
     }
 
     createLights() {
