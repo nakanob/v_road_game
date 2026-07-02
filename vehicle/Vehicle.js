@@ -8,6 +8,7 @@ import { InputManager } from "./InputManager.js";
 import { VehicleController } from "./VehicleController.js";
 import { Suspension } from "./Suspension.js";
 import { WheelAnimator } from "./WheelAnimator.js";
+import { EngineSound } from "./EngineSound.js";
 
 
 this.controller =
@@ -51,6 +52,9 @@ export class Vehicle {
         
         this.wheelAnimator =
         new WheelAnimator(this);
+
+        this.engineSound =
+        new EngineSound(this);
     }
 
     async load() {
@@ -128,6 +132,8 @@ export class Vehicle {
         this.suspension.update(delta);
 
         this.updateTransform();
+
+        this.engineSound.update();
 
     }
 
