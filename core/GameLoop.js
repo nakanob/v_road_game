@@ -36,7 +36,11 @@ export class GameLoop {
         }
 
     }
+    pause() {
 
+        this.running = false;
+
+    }
     animate() {
 
         if (!this.running) return;
