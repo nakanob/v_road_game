@@ -55,6 +55,9 @@ export class Vehicle {
 
         this.engineSound =
         new EngineSound(this);
+        
+        this.vehicleReset =
+        new VehicleReset(this);
     }
 
     async load() {
