@@ -30,6 +30,9 @@ import { Water } from "../world/Water.js";
 import { Bridge } from "../world/Bridge.js";
 import { RoadGenerator } from "../world/RoadGenerator.js";
 import { RoadSpline } from "../world/RoadSpline.js";
+import { CheckpointManager } from "../world/CheckpointManager.js";
+
+
 
 export class SceneManager {
 
@@ -220,6 +223,13 @@ export class SceneManager {
         this.roadSpline =
             new RoadSpline(this);
         
+        this.checkpointManager =
+
+            new CheckpointManager(this);
+    
+        this.register(
+            this.checkpointManager
+        );
     }
 
     createLights() {
