@@ -11,7 +11,7 @@ import { TireTrack } from "../effects/TireTrack.js";
 import { Smoke } from "../effects/Smoke.js";
 import { HUD } from "../ui/HUD.js";
 import { SpeedMeter } from "../ui/SpeedMeter.js";
-
+import { MiniMap } from "../ui/MiniMap.js";
 
 
 
@@ -118,7 +118,14 @@ export class SceneManager {
         this.register(
             this.speedMeter
         );
+        this.miniMap = new MiniMap(
+            this,
+            this.vehicle
+        );
 
+        this.register(
+            this.miniMap
+        );
 
 
         
