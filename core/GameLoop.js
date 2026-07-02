@@ -41,6 +41,17 @@ export class GameLoop {
         this.running = false;
 
     }
+    resume() {
+
+        if (this.running) return;
+
+        this.running = true;
+
+        this.clock.getDelta();
+
+        this.animate();
+
+    }
     animate() {
 
         if (!this.running) return;
