@@ -20,6 +20,9 @@ import { DayNightCycle } from "../world/DayNightCycle.js";
 import { GrassGenerator } from "../world/GrassGenerator.js";
 import { CollisionManager } from "../world/CollisionManager.js";
 import { LoadingScreen } from "../ui/LoadingScreen.js";
+import { PhotoMode } from "../ui/PhotoMode.js";
+
+
 
 
 export class SceneManager {
@@ -180,6 +183,7 @@ export class SceneManager {
         this.register(
             this.collisionManager
         );
+        this.photoMode = new PhotoMode(this);
         
     }
 
