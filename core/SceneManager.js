@@ -10,7 +10,7 @@ import { Dust } from "../effects/Dust.js";
 import { TireTrack } from "../effects/TireTrack.js";
 import { Smoke } from "../effects/Smoke.js";
 import { HUD } from "../ui/HUD.js";
-
+import { SpeedMeter } from "../ui/SpeedMeter.js";
 
 
 
@@ -110,7 +110,14 @@ export class SceneManager {
         this.register(
             this.hud
         );
+        this.speedMeter = new SpeedMeter(
+            this,
+            this.vehicle
+        );
 
+        this.register(
+            this.speedMeter
+        );
 
 
 
