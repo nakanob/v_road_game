@@ -18,10 +18,11 @@ export class GameLoop {
 
         this.running = true;
 
+        this.clock.start();
+
         this.animate();
 
     }
-
     stop() {
 
         this.running = false;
