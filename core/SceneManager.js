@@ -21,7 +21,7 @@ import { GrassGenerator } from "../world/GrassGenerator.js";
 import { CollisionManager } from "../world/CollisionManager.js";
 import { LoadingScreen } from "../ui/LoadingScreen.js";
 import { PhotoMode } from "../ui/PhotoMode.js";
-
+import { Wind } from "../weather/Wind.js";
 
 
 
@@ -184,7 +184,11 @@ export class SceneManager {
             this.collisionManager
         );
         this.photoMode = new PhotoMode(this);
-        
+
+
+        this.wind = new Wind(this);
+
+        this.register(this.wind);
     }
 
     createLights() {
