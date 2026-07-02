@@ -9,7 +9,7 @@ import { VehicleController } from "./VehicleController.js";
 import { Suspension } from "./Suspension.js";
 import { WheelAnimator } from "./WheelAnimator.js";
 import { EngineSound } from "./EngineSound.js";
-
+import { VehicleReset } from "./VehicleReset.js";
 
 this.controller =
     new VehicleController(this);
