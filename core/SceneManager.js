@@ -12,7 +12,7 @@ import { Smoke } from "../effects/Smoke.js";
 import { HUD } from "../ui/HUD.js";
 import { SpeedMeter } from "../ui/SpeedMeter.js";
 import { MiniMap } from "../ui/MiniMap.js";
-
+import { AssetLoader } from "./AssetLoader.js";
 
 
 export class SceneManager {
@@ -126,7 +126,7 @@ export class SceneManager {
         this.register(
             this.miniMap
         );
-
+        this.assetLoader = new AssetLoader();
 
         
     }
