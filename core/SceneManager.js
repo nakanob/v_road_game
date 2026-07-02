@@ -29,7 +29,7 @@ import { WeatherManager } from "../weather/WeatherManager.js";
 import { Water } from "../world/Water.js";
 import { Bridge } from "../world/Bridge.js";
 import { RoadGenerator } from "../world/RoadGenerator.js";
-
+import { RoadSpline } from "../world/RoadSpline.js";
 
 export class SceneManager {
 
@@ -217,7 +217,8 @@ export class SceneManager {
         this.bridge = new Bridge(this);
         this.roadGenerator =
             new RoadGenerator(this);
-
+        this.roadSpline =
+            new RoadSpline(this);
         
     }
 
