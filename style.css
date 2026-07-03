@@ -299,3 +299,38 @@ canvas {
     cursor:pointer;
 
 }
+#lap-hud{
+
+    position:fixed;
+
+    top:20px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    min-width:180px;
+
+    padding:12px 20px;
+
+    border-radius:10px;
+
+    background:rgba(0,0,0,.45);
+
+    color:#fff;
+
+    text-align:center;
+
+    font-family:Arial,sans-serif;
+
+    font-size:22px;
+
+    font-weight:bold;
+
+    line-height:1.6;
+
+    z-index:1000;
+
+    user-select:none;
+
+}
