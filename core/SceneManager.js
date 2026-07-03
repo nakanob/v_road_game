@@ -244,26 +244,49 @@ export class SceneManager {
         );
     }
 
-    createLights(){
+    createLights() {
 
-        this.ambientLight = ...
+    this.ambientLight = new THREE.AmbientLight(
+        0xffffff,
+        1.2
+    );
 
-        this.sunLight = ...
+    this.scene.add(this.ambientLight);
 
-        this.scene.add(this.ambientLight);
+    this.sunLight = new THREE.DirectionalLight(
+        0xffffff,
+        2.8
+    );
 
-        this.scene.add(this.sunLight);
+    this.sunLight.position.set(
+        300,
+        400,
+        200
+    );
 
-        this.scene.add(this.sunLight.target);
+    this.sunLight.castShadow = true;
 
-        this.sky = new Sky(this);
+    this.sunLight.shadow.mapSize.width = 4096;
+    this.sunLight.shadow.mapSize.height = 4096;
 
-        this.sun = new Sun(this);
+    this.sunLight.shadow.camera.left = -500;
+    this.sunLight.shadow.camera.right = 500;
+    this.sunLight.shadow.camera.top = 500;
+    this.sunLight.shadow.camera.bottom = -500;
+    this.sunLight.shadow.camera.near = 0.5;
+    this.sunLight.shadow.camera.far = 1500;
 
-        this.register(this.sun);
+    this.scene.add(this.sunLight);
+
+    this.scene.add(this.sunLight.target);
+
+    this.sky = new Sky(this);
+
+    this.sun = new Sun(this);
+
+    this.register(this.sun);
 
     }
-
     add(object) {
 
         this.scene.add(object);
