@@ -18,7 +18,7 @@ export class GameLoop {
 
         this.running = true;
 
-        this.clock.start();
+        this.sceneManager.clock.start();
 
         this.animate();
 
