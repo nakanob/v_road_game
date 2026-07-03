@@ -31,7 +31,7 @@ import { Bridge } from "../world/Bridge.js";
 import { RoadGenerator } from "../world/RoadGenerator.js";
 import { RoadSpline } from "../world/RoadSpline.js";
 import { CheckpointManager } from "../world/CheckpointManager.js";
-
+import { LapHUD } from "../ui/LapHUD.js";
 
 
 export class SceneManager {
@@ -229,6 +229,13 @@ export class SceneManager {
     
         this.register(
             this.checkpointManager
+        );
+        this.lapHUD =
+
+            new LapHUD(this);
+
+        this.register(
+            this.lapHUD
         );
     }
 
