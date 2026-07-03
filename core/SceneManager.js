@@ -80,6 +80,35 @@ export class SceneManager {
             "resize",
             this.onResize.bind(this)
         );
+
+
+        this.assetLoader = new AssetLoader();
+        // core/SceneManager.js
+        // constructor() の assetLoader 作成直後へ追加
+
+        this.loadingScreen =
+
+        new LoadingScreen();
+
+        this.assetLoader.onProgress(
+
+            (percent) => {
+
+                this.loadingScreen.setProgress(
+
+                    percent
+
+                );
+
+                if (percent >= 100) {
+
+                    this.loadingScreen.hide();
+
+                }
+
+            }
+
+        );
         this.terrain = new Terrain(this);
         this.treeGenerator = new TreeGenerator(this);
         this.rockGenerator = new RockGenerator(this);
@@ -114,33 +143,7 @@ export class SceneManager {
             this.tireTrack
         );
 
-        this.assetLoader = new AssetLoader();
-        // core/SceneManager.js
-        // constructor() の assetLoader 作成直後へ追加
-
-        this.loadingScreen =
-
-        new LoadingScreen();
-
-        this.assetLoader.onProgress(
-
-            (percent) => {
-
-                this.loadingScreen.setProgress(
-
-                    percent
-
-                );
-
-                if (percent >= 100) {
-
-                    this.loadingScreen.hide();
-
-                }
-
-            }
-
-        );
+        
 
         
         this.smoke = new Smoke(
@@ -241,54 +244,24 @@ export class SceneManager {
         );
     }
 
-    createLights() {
-        this.sky = new Sky(this);
-        this.sun = new Sun(this);
+    createLights(){
 
-        this.register(
-            this.sun
-        );
-        this.ambientLight = new THREE.AmbientLight(
-            0xffffff,
-            1.2
-        );
+        this.ambientLight = ...
+
+        this.sunLight = ...
 
         this.scene.add(this.ambientLight);
 
-        this.sunLight = new THREE.DirectionalLight(
-            0xffffff,
-            2.8
-        );
-
-        this.sunLight.position.set(
-            300,
-            400,
-            200
-        );
-
-        this.sunLight.castShadow = true;
-
-        this.sunLight.shadow.mapSize.width = 4096;
-        this.sunLight.shadow.mapSize.height = 4096;
-
-        this.sunLight.shadow.camera.left = -500;
-        this.sunLight.shadow.camera.right = 500;
-        this.sunLight.shadow.camera.top = 500;
-        this.sunLight.shadow.camera.bottom = -500;
-
-        this.sunLight.shadow.camera.near = 0.5;
-        this.sunLight.shadow.camera.far = 1500;
-
         this.scene.add(this.sunLight);
-        const axesHelper = new THREE.AxesHelper(5);
 
-        this.scene.add(
-            axesHelper
-        );
+        this.scene.add(this.sunLight.target);
 
-        this.scene.add(
-            this.sunLight.target
-        );
+        this.sky = new Sky(this);
+
+        this.sun = new Sun(this);
+
+        this.register(this.sun);
+
     }
 
     add(object) {
