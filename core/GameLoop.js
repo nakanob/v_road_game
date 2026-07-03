@@ -47,7 +47,7 @@ export class GameLoop {
 
         this.running = true;
 
-        this.clock.getDelta();
+        this.sceneManager.clock.getDelta();
 
         this.animate();
 
