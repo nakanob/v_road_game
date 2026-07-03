@@ -28,7 +28,6 @@ import { Fog } from "../weather/Fog.js";
 import { WeatherManager } from "../weather/WeatherManager.js";
 import { Water } from "../world/Water.js";
 import { Bridge } from "../world/Bridge.js";
-import { RoadGenerator } from "../world/RoadGenerator.js";
 import { RoadSpline } from "../world/RoadSpline.js";
 import { CheckpointManager } from "../world/CheckpointManager.js";
 import { LapHUD } from "../ui/LapHUD.js";
@@ -114,6 +113,36 @@ export class SceneManager {
         this.register(
             this.tireTrack
         );
+
+        this.assetLoader = new AssetLoader();
+        // core/SceneManager.js
+        // constructor() の assetLoader 作成直後へ追加
+
+        this.loadingScreen =
+
+        new LoadingScreen();
+
+        this.assetLoader.onProgress(
+
+            (percent) => {
+
+                this.loadingScreen.setProgress(
+
+                    percent
+
+                );
+
+                if (percent >= 100) {
+
+                    this.loadingScreen.hide();
+
+                }
+
+            }
+
+        );
+
+        
         this.smoke = new Smoke(
             this,
             this.vehicle
@@ -145,33 +174,6 @@ export class SceneManager {
 
         this.register(
             this.miniMap
-        );
-        this.assetLoader = new AssetLoader();
-        // core/SceneManager.js
-        // constructor() の assetLoader 作成直後へ追加
-
-        this.loadingScreen =
-
-        new LoadingScreen();
-
-        this.assetLoader.onProgress(
-
-            (percent) => {
-
-                this.loadingScreen.setProgress(
-
-                    percent
-
-                );
-
-                if (percent >= 100) {
-
-                    this.loadingScreen.hide();
-
-                }
-
-            }
-
         );
 
         
