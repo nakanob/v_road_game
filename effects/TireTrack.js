@@ -65,15 +65,31 @@ export class TireTrack {
 
         );
 
-        const leftPos = this.vehicle.position.clone().add(
+        const rearDirection = forward.clone().multiplyScalar(
         
-            right.clone().multiplyScalar(leftOffset)
+            -this.vehicle.rearAxleOffset
         
         );
         
-        const rightPos = this.vehicle.position.clone().add(
+        // 左後輪
+        const leftPos = this.vehicle.position.clone()
         
-            right.clone().multiplyScalar(rightOffset)
+            .add(rearDirection)
+        
+            .add(
+        
+                right.clone().multiplyScalar(leftOffset)
+        
+        );
+        
+        // 右後輪
+        const rightPos = this.vehicle.position.clone()
+        
+            .add(rearDirection)
+        
+            .add(
+        
+                right.clone().multiplyScalar(rightOffset)
         
         );
 
