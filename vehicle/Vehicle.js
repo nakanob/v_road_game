@@ -91,7 +91,7 @@ export class Vehicle {
 
             this.model = model;
 
-            this.model.scale.setScalar(200);
+            this.model.scale.setScalar(150);
 
             this.model.updateMatrixWorld(true);
 
