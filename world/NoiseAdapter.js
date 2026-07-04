@@ -18,7 +18,7 @@ export class NoiseAdapter {
 
     constructor(noiseInstance) {
 
-        this.noise = noiseInstance;
+        this.noiseInstance = noiseInstance;
 
     }
 
