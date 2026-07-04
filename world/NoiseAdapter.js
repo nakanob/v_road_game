@@ -30,23 +30,23 @@ export class NoiseAdapter {
      */
     noise(x, z) {
 
-        if (!this.noise) {
+        if (!this.noiseInstance) {
 
             return 0;
 
         }
 
         // simplex-noise v4系
-        if (typeof this.noise.noise2D === "function") {
+        if (typeof this.noiseInstance.noise2D === "function") {
 
-            return this.noise.noise2D(x, z);
+            return this.noiseInstance.noise2D(x, z);
 
         }
 
         // 旧実装
-        if (typeof this.noise.noise === "function") {
+        if (typeof this.noiseInstance.noise === "function") {
 
-            return this.noise.noise(x, z);
+            return this.noiseInstance.noise(x, z);
 
         }
 
