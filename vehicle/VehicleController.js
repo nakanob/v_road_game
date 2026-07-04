@@ -13,7 +13,7 @@ export class VehicleController {
         this.maxForwardSpeed = 35;
         this.maxReverseSpeed = 12;
 
-        this.acceleration = 18;
+        this.acceleration = 10;
         this.brakePower = 30;
 
         this.drag = 8;
