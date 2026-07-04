@@ -96,13 +96,13 @@ export class TireTrack {
         leftPos.y += 0.02;
         rightPos.y += 0.02;
 
-console.log("width", this.vehicle.dimensions.width);
+//console.log("width", this.vehicle.dimensions.width);
 
-console.log("rear", this.vehicle.rearAxleOffset);
+//console.log("rear", this.vehicle.rearAxleOffset);
 
-console.log("LEFT", leftPos);
+//console.log("LEFT", leftPos);
 
-console.log("RIGHT", rightPos);
+//console.log("RIGHT", rightPos);
         
         this.createSegment(
             leftPos,
