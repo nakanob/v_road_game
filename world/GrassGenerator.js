@@ -19,7 +19,7 @@ export class GrassGenerator {
 
         this.group.name = "Grass";
 
-        this.bladeCount = 12000;
+        this.bladeCount = 500;
 
         this.create();
 
