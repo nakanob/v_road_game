@@ -142,7 +142,13 @@ export class Vehicle {
         this.engineSound.update();
 
     }
+    this.position.y =
+        this.terrain.getHeight(
+            this.position.x,
+            this.position.z
+        );
 
+    
     updateTransform() {
 
         if (!this.model) return;
