@@ -183,11 +183,11 @@ export class SceneManager {
         );
 
         
-        this.chunkManager = new ChunkManager(this);
+       // this.chunkManager = new ChunkManager(this);
 
-        this.register(
-            this.chunkManager
-        );
+       // this.register(
+       //     this.chunkManager
+       // );
         this.dayNightCycle = new DayNightCycle(this);
 
         this.register(
