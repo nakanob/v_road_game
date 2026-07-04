@@ -74,6 +74,8 @@ export class Vehicle {
         
         this.vehicleReset =
         new VehicleReset(this);
+        this.headLights = [];
+        this.tailLights = [];
     }
 
     async load() {
@@ -158,7 +160,7 @@ this.position.set(
         catch (error) {
 
             console.error(error);
-
+            this.createLights();
         }
 
     }
@@ -176,7 +178,7 @@ this.position.set(
         this.updateTransform();
 
         this.engineSound.update();
-        
+        this.updateLights();
         this.position.y =
         this.terrain.getHeight(
             this.position.x,
@@ -210,6 +212,132 @@ this.position.set(
             this.suspension.roll
 
         );
+
+    }
+createLights() {
+
+    const front =
+        this.dimensions.length * 0.48;
+
+    const rear =
+        this.dimensions.length * 0.48;
+
+    const halfWidth =
+        this.dimensions.width * 0.42;
+
+    const lightHeight =
+        this.dimensions.height * 0.45;
+
+    // 左ヘッドライト
+    this.createHeadLight(
+        -halfWidth,
+        lightHeight,
+        front
+    );
+
+    // 右ヘッドライト
+    this.createHeadLight(
+        halfWidth,
+        lightHeight,
+        front
+    );
+
+    // 左テールランプ
+    this.createTailLight(
+        -halfWidth,
+        lightHeight,
+        -rear
+    );
+
+    // 右テールランプ
+    this.createTailLight(
+        halfWidth,
+        lightHeight,
+        -rear
+    );
+
+}
+    createHeadLight(x, y, z) {
+
+    const light =
+        new THREE.SpotLight(
+            0xffffff,
+            0
+        );
+
+    light.distance = 80;
+    light.angle = 0.35;
+    light.penumbra = 0.5;
+    light.decay = 2;
+
+    light.position.set(x, y, z);
+
+    light.target.position.set(
+        x,
+        y - 0.2,
+        z + 30
+    );
+
+    this.model.add(light);
+
+    this.model.add(light.target);
+
+    this.headLights.push(light);
+
+}
+    createTailLight(x, y, z) {
+
+    const geometry =
+        new THREE.SphereGeometry(
+            0.08,
+            12,
+            12
+        );
+
+    const material =
+        new THREE.MeshBasicMaterial({
+
+            color: 0xff2020
+
+        });
+
+    const mesh =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+    mesh.position.set(
+        x,
+        y,
+        z
+    );
+
+    mesh.visible = false;
+
+    this.model.add(mesh);
+
+    this.tailLights.push(mesh);
+
+}
+}
+updateLights() {
+
+    const isNight =
+        this.sceneManager.sun
+            ? this.sceneManager.sun.isNight
+            : false;
+
+    for (const light of this.headLights) {
+
+        light.intensity =
+            isNight ? 35 : 0;
+
+    }
+
+    for (const lamp of this.tailLights) {
+
+        lamp.visible = isNight;
 
     }
 
