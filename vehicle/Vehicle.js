@@ -31,7 +31,17 @@ export class Vehicle {
         this.loader = new GLTFLoader();
 
         this.model = null;
-
+        this.dimensions = {
+        
+            width: 0,
+        
+            height: 0,
+        
+            length: 0
+        
+        };
+        
+        this.groundOffset = 0;
         this.position = new THREE.Vector3(
             0,
             0,
@@ -94,6 +104,23 @@ export class Vehicle {
             this.model.scale.setScalar(150);
 
             this.model.updateMatrixWorld(true);
+            const box = new THREE.Box3().setFromObject(this.model);
+
+            const size = new THREE.Vector3();
+            
+            box.getSize(size);
+            
+            this.dimensions.width = size.x;
+            
+            this.dimensions.height = size.y;
+            
+            this.dimensions.length = size.z;
+            
+            this.groundOffset = -box.min.y;
+            
+            console.log(this.dimensions);
+            
+            console.log(this.groundOffset);
 
             this.model.traverse((child) => {
 
@@ -155,8 +182,14 @@ this.position.set(
 
         if (!this.model) return;
 
-        this.model.position.copy(
-            this.position
+        this.model.position.set(
+        
+            this.position.x,
+        
+            this.position.y + this.groundOffset,
+        
+            this.position.z
+        
         );
 
         this.model.rotation.set(
