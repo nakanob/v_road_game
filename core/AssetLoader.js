@@ -1,8 +1,8 @@
 // core/AssetLoader.js
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.179/examples/jsm/loaders/GLTFLoader.js";
-
+//import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.179/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from "https://unpkg.com/three@0.179.1/examples/jsm/loaders/GLTFLoader.js?module";
 export class AssetLoader {
 
     constructor() {
