@@ -78,7 +78,7 @@ export class Vehicle {
 
                     "vehicle",
 
-                    "./models/vehicles/car.glb"
+                    "./models/car.glb"
 
                 );
 
