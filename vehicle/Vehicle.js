@@ -22,6 +22,8 @@ export class Vehicle {
         this.scene = sceneManager.scene;
         this.terrain = sceneManager.terrain;
 
+        this.assetLoader = sceneManager.assetLoader;
+
         this.input = new InputManager();
         this.controller =
             new VehicleController(this);
