@@ -202,7 +202,7 @@ export class VehicleController {
 
                 this.vehicle.position.z
 
-            ) + 1.5;
+            );
 
     }
 
