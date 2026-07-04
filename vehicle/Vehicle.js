@@ -2,7 +2,7 @@
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
 
-//import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.179/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from "https://unpkg.com/three@0.179.1/examples/jsm/loaders/GLTFLoader.js?module";
 
 import { InputManager } from "./InputManager.js";
 import { VehicleController } from "./VehicleController.js";
@@ -11,8 +11,7 @@ import { WheelAnimator } from "./WheelAnimator.js";
 import { EngineSound } from "./EngineSound.js";
 import { VehicleReset } from "./VehicleReset.js";
 
-this.controller =
-    new VehicleController(this);
+
 
 
 export class Vehicle {
@@ -24,6 +23,8 @@ export class Vehicle {
         this.terrain = sceneManager.terrain;
 
         this.input = new InputManager();
+        this.controller =
+            new VehicleController(this);
 
         this.loader = new GLTFLoader();
 
