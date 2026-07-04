@@ -40,6 +40,9 @@ export class Vehicle {
             length: 0
         
         };
+        this.wheelBase = 0;
+
+        this.rearAxleOffset = 0;
         
         this.groundOffset = 0;
         this.position = new THREE.Vector3(
@@ -115,6 +118,12 @@ export class Vehicle {
             this.dimensions.height = size.y;
             
             this.dimensions.length = size.z;
+
+            // 車長からホイールベースを推定
+            this.wheelBase = this.dimensions.length * 0.62;
+            
+            // 車体中心から後輪までの距離
+            this.rearAxleOffset = this.wheelBase * 0.5;
             
             this.groundOffset = -box.min.y;
             
