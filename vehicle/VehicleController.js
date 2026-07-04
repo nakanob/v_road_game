@@ -16,7 +16,7 @@ export class VehicleController {
         this.acceleration = 10;
         this.brakePower = 30;
 
-        this.drag = 8;
+        this.drag = 5;
 
         this.maxSteeringAngle =
             THREE.MathUtils.degToRad(35);
