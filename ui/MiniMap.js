@@ -53,25 +53,30 @@ export class MiniMap {
 
         if (!this.vehicle.model) return;
 
+        // 車の真上へ移動
         this.camera.position.set(
-
+        
             this.vehicle.position.x,
-
+        
             180,
-
+        
             this.vehicle.position.z
-
+        
         );
-
+        
+        // 真下を見る
         this.camera.lookAt(
-
+        
             this.vehicle.position.x,
-
+        
             0,
-
+        
             this.vehicle.position.z
-
+        
         );
+        
+        // 車の向きに合わせてミニマップを回転
+        this.camera.rotation.z = this.vehicle.direction;
 
         this.renderer.render(
 
