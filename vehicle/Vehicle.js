@@ -90,7 +90,11 @@ export class Vehicle {
             }
 
             this.model = model;
+            console.log(this.model);
 
+            const box = new THREE.Box3().setFromObject(this.model);
+
+            console.log(box);
             this.model.traverse((child) => {
 
                 if (child.isMesh) {
