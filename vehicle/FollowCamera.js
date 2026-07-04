@@ -44,7 +44,7 @@ export class FollowCamera {
 
             0,
 
-            Math.cos(this.vehicle.direction)
+            -Math.cos(this.vehicle.direction)
 
         );
 
