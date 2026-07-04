@@ -109,15 +109,11 @@ export class Vehicle {
 
             this.scene.add(this.model);
 
-            this.position.set(
-            
-                0,
-            
-                this.terrain.getHeight(0, 0) + 3,
-            
-                0
-            
-            );
+this.position.set(
+    0,
+    20,
+    0
+);
 
             this.updateTransform();
 
