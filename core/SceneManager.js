@@ -2,8 +2,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.mod
 import { Terrain } from "../world/Terrain.js";
 import { TreeGenerator } from "../world/TreeGenerator.js";
 import { RockGenerator } from "../world/RockGenerator.js";
-import { Vehicle } from "../vehicle/Vehicle.js";
-import { FollowCamera } from "../vehicle/FollowCamera.js";
+
 import { RoadGenerator } from "../world/RoadGenerator.js";
 import { RiverGenerator } from "../world/RiverGenerator.js";
 import { Dust } from "../effects/Dust.js";
@@ -20,6 +19,10 @@ import { DayNightCycle } from "../world/DayNightCycle.js";
 import { GrassGenerator } from "../world/GrassGenerator.js";
 import { CollisionManager } from "../world/CollisionManager.js";
 import { LoadingScreen } from "../ui/LoadingScreen.js";
+
+import { Vehicle } from "../vehicle/Vehicle.js";
+import { FollowCamera } from "../vehicle/FollowCamera.js";
+
 import { PhotoMode } from "../ui/PhotoMode.js";
 import { Wind } from "../weather/Wind.js";
 import { Rain } from "../weather/Rain.js";
