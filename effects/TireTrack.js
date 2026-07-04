@@ -13,8 +13,7 @@ export class TireTrack {
         this.group = new THREE.Group();
         this.scene.add(this.group);
 
-        this.leftOffset = -0.9;
-        this.rightOffset = 0.9;
+        this.trackWidth = 0;
 
         this.distanceThreshold = 0.6;
 
@@ -50,7 +49,12 @@ export class TireTrack {
             Math.cos(this.vehicle.direction)
 
         );
-
+        this.trackWidth =
+            this.vehicle.dimensions.width * 0.42;
+        
+        const leftOffset = -this.trackWidth;
+        
+        const rightOffset = this.trackWidth;
         const right = new THREE.Vector3(
 
             forward.z,
@@ -62,15 +66,15 @@ export class TireTrack {
         );
 
         const leftPos = this.vehicle.position.clone().add(
-
-            right.clone().multiplyScalar(this.leftOffset)
-
+        
+            right.clone().multiplyScalar(leftOffset)
+        
         );
-
+        
         const rightPos = this.vehicle.position.clone().add(
-
-            right.clone().multiplyScalar(this.rightOffset)
-
+        
+            right.clone().multiplyScalar(rightOffset)
+        
         );
 
         leftPos.y += 0.02;
