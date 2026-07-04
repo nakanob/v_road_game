@@ -184,7 +184,7 @@ export class VehicleController {
 
             delta;
 
-        this.vehicle.position.z +=
+        this.vehicle.position.z -=
 
             Math.cos(
                 this.vehicle.direction
