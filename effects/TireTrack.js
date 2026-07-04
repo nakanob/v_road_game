@@ -197,6 +197,8 @@ console.log("RIGHT", rightPos);
 
         this.group.add(mesh);
 
+        console.log("ADD", side, mesh.position);
+
         if (side === "left") {
 
             this.lastLeft = position.clone();
