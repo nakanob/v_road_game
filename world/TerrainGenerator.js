@@ -127,8 +127,8 @@ export class TerrainGenerator {
 
         }
 
-       // return height;
-        return 0;
+        return height;
+       // return 0;
     }
 
 }
