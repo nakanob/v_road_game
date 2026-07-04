@@ -68,67 +68,12 @@ export class TerrainGenerator {
         positions.needsUpdate = true;
 
     }
-
     getHeight(x, z) {
 
-        const sampleX =
-            x * this.noiseScale;
+        return Math.sin(x * 0.01) * 5
+             + Math.cos(z * 0.01) * 5;
 
-        const sampleZ =
-            z * this.noiseScale;
-
-        const warped =
-            this.noise.domainWarp(
-                sampleX,
-                sampleZ,
-                12
-            );
-
-        const mountains =
-            this.noise.ridged(
-                warped.x * 0.45,
-                warped.z * 0.45,
-                5
-            );
-
-        const hills =
-            this.noise.fbm(
-                warped.x,
-                warped.z,
-                6,
-                0.5,
-                2.0
-            );
-
-        const detail =
-            this.noise.fbm(
-                warped.x * 5,
-                warped.z * 5,
-                3,
-                0.45,
-                2.2
-            );
-
-        let height = 0;
-
-        // なだらかな丘
-        height += hills * 45;
-
-        // 山岳
-        height += mountains * 90;
-
-        // 細かい凹凸
-        height += detail * 4;
-
-        // 平坦部を増やす
-        if (height < 12) {
-
-            height *= 0.45;
-
-        }
-
-        return height;
-       // return 0;
     }
+
 
 }
