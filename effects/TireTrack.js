@@ -96,6 +96,9 @@ export class TireTrack {
         leftPos.y += 0.02;
         rightPos.y += 0.02;
 
+        console.log("LEFT", leftPos);
+        console.log("RIGHT", rightPos);
+        
         this.createSegment(
             leftPos,
             "left"
