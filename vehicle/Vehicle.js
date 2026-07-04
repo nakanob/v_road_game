@@ -145,7 +145,7 @@ export class Vehicle {
         this.terrain.getHeight(
             this.position.x,
             this.position.z
-        );
+        ) + 3;
 
     }
 
