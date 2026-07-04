@@ -35,10 +35,10 @@ export class TireTrack {
     }
 
     update() {
-
+    
+        console.log("TireTrack update");
+    
         if (!this.vehicle.model) return;
-
-        if (Math.abs(this.vehicle.speed) < 1) return;
 
         const forward = new THREE.Vector3(
 
