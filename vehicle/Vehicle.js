@@ -236,7 +236,7 @@ this.position.set(
         );
 
     }
-createLights() {
+    createLights() {
 
     const front =
         this.dimensions.length * 0.48;
@@ -342,7 +342,4 @@ createTailLight(x, y, z) {
     this.tailLights.push(mesh);
 
 }
-
-
-
 }
