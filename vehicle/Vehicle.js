@@ -342,4 +342,3 @@ createTailLight(x, y, z) {
     this.tailLights.push(mesh);
 }
 }
-}
