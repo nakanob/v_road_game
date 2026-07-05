@@ -279,7 +279,7 @@ createLights() {
     );
 
 }
-    createHeadLight(x, y, z) {
+createHeadLight(x, y, z) {
 
     const light =
         new THREE.SpotLight(
@@ -307,7 +307,7 @@ createLights() {
     this.headLights.push(light);
 
 }
-    createTailLight(x, y, z) {
+createTailLight(x, y, z) {
 
     const geometry =
         new THREE.SphereGeometry(
@@ -342,7 +342,7 @@ createLights() {
     this.tailLights.push(mesh);
 
 }
-}
+
 
 
 }
