@@ -13,8 +13,11 @@ export class Suspension {
         this.pitch = 0;
         this.roll = 0;
 
-        this.wheelBase = 2.8;
-        this.trackWidth = 1.8;
+        this.wheelBase =
+            vehicle.wheelBase;
+        
+        this.trackWidth =
+            vehicle.trackWidth;
 
         this.smoothing = 5;
 
