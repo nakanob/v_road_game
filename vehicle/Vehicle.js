@@ -33,13 +33,24 @@ export class Vehicle {
         this.model = null;
         this.dimensions = {
         
-            width: 0,
+            width: 4.75,
         
-            height: 0,
+            length: 10.9,
         
-            length: 0
+            height: 3.1
         
         };
+        
+        // 前後タイヤ中心距離
+        this.wheelBase = 6.2;
+        
+        // 左右タイヤ中心距離
+        this.trackWidth = 2.1;
+        
+        // 後輪中心までの距離
+        this.rearAxleOffset =
+            this.wheelBase * 0.5;
+        
         this.wheelBase = 0;
 
         this.rearAxleOffset = 0;
