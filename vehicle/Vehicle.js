@@ -109,7 +109,13 @@ export class Vehicle {
             this.model = model;
 
             this.model.scale.setScalar(150);
+            
+this.pivot = new THREE.Group();
 
+this.scene.add(this.pivot);
+
+this.pivot.add(this.model);
+            
             this.model.updateMatrixWorld(true);
             const box = new THREE.Box3().setFromObject(this.model);
 
@@ -147,7 +153,7 @@ export class Vehicle {
 
             });
 
-            this.scene.add(this.model);
+  //          this.scene.add(this.model);
 
             this.position.set(
                 0,
@@ -191,13 +197,15 @@ export class Vehicle {
 
         if (!this.model) return;
 
+        this.pivot.position.copy(this.position);
+        
         this.model.position.set(
         
-            this.position.x,
+            0,
         
-            this.position.y + this.groundOffset,
+            this.groundOffset,
         
-            this.position.z
+            0
         
         );
 
@@ -276,11 +284,11 @@ createHeadLight(x, y, z) {
         z + 30
     );
 
-    this.model.add(light);
+    this.pivot.add(light);
 
     this.model.add(light.target);
 
-    this.headLights.push(light);
+    this.pivot.add(light.target);
 
 }
 createTailLight(x, y, z) {
@@ -313,7 +321,7 @@ createTailLight(x, y, z) {
 
     mesh.visible = false;
 
-    this.model.add(mesh);
+    this.pivot.add(mesh);
 
     this.tailLights.push(mesh);
 }
