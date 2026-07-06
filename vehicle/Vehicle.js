@@ -149,22 +149,20 @@ export class Vehicle {
 
             this.scene.add(this.model);
 
-this.position.set(
-    0,
-    20,
-    0
-);
+            this.position.set(
+                0,
+                20,
+                0
+            );
 
             this.updateTransform();
-
-        }
             this.createLights();
-        catch (error) {
+            catch (error) {
 
-            console.error(error);
+                console.error(error);
 
+            }
         }
-
     }
 
     update(delta) {
