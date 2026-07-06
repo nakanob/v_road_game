@@ -158,9 +158,15 @@ export class WheelAnimator {
 
         if (!wheel) return;
 
-        wheel.rotation.y = steering;
-
-        wheel.rotation.x = this.rotation;
+            onst original =
+            
+                this.originalRotation.get(wheel);
+            
+            wheel.rotation.copy(original);
+            
+            wheel.rotateY(steering);
+            
+            wheel.rotateX(this.rotation);
 
     }
 
