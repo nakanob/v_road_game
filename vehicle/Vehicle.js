@@ -158,11 +158,11 @@ this.position.set(
             this.updateTransform();
 
         }
-
+            this.createLights();
         catch (error) {
 
             console.error(error);
-            this.createLights();
+
         }
 
     }
