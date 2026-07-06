@@ -20,6 +20,15 @@ export class WheelAnimator {
         this.rotation = 0;
 
         this.findWheels();
+        this.originalRotation.set(
+
+    child,
+
+    child.rotation.clone()
+
+);
+        this.originalRotation =
+        new WeakMap();
 
     }
 
@@ -28,25 +37,53 @@ export class WheelAnimator {
         if (!this.vehicle.model) return;
 
         this.vehicle.model.traverse((child) => {
-
-            switch (child.name) {
-
-                case "Wheel_FL":
-                    this.wheels.frontLeft = child;
-                    break;
-
-                case "Wheel_FR":
-                    this.wheels.frontRight = child;
-                    break;
-
-                case "Wheel_RL":
-                    this.wheels.rearLeft = child;
-                    break;
-
-                case "Wheel_RR":
-                    this.wheels.rearRight = child;
-                    break;
-
+            const name = child.name.toLowerCase();
+            if (
+            
+                name.includes("wheel") &&
+            
+                name.includes("fl")
+            
+            ){
+            
+                this.wheels.frontLeft = child;
+            
+            }
+            
+            else if (
+            
+                name.includes("wheel") &&
+            
+                name.includes("fr")
+            
+            ){
+            
+                this.wheels.frontRight = child;
+            
+            }
+            
+            else if (
+            
+                name.includes("wheel") &&
+            
+                name.includes("rl")
+            
+            ){
+            
+                this.wheels.rearLeft = child;
+            
+            }
+            
+            else if (
+            
+                name.includes("wheel") &&
+            
+                name.includes("rr")
+            
+            ){
+            
+                this.wheels.rearRight = child;
+            
             }
 
         });
