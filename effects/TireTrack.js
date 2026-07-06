@@ -93,8 +93,9 @@ export class TireTrack {
         
         );
 
-        leftPos.y += 0.02;
-        rightPos.y += 0.02;
+leftPos.y += this.vehicle.groundOffset;
+
+rightPos.y += this.vehicle.groundOffset;
 
 //console.log("width", this.vehicle.dimensions.width);
 
