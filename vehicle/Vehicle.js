@@ -157,11 +157,9 @@ export class Vehicle {
 
             this.updateTransform();
             this.createLights();
-            catch (error) {
-
-                console.error(error);
-
-            }
+        }
+        catch (error) {
+           console.error(error);
         }
     }
 
