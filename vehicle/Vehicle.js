@@ -77,27 +77,7 @@ export class Vehicle {
         this.headLights = [];
         this.tailLights = [];
 
-        updateLights() {
 
-            const isNight =
-                this.sceneManager.sun
-                    ? this.sceneManager.sun.isNight
-                    : false;
-        
-            for (const light of this.headLights) {
-        
-                light.intensity =
-                    isNight ? 35 : 0;
-        
-            }
-        
-            for (const lamp of this.tailLights) {
-        
-                lamp.visible = isNight;
-        
-            }
-        
-        }
     }
 
     async load() {
