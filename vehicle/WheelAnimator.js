@@ -15,16 +15,11 @@ export class WheelAnimator {
             rearLeft: null,
         rearRight: null
 
-    };
+        };
 
-    this.rotation = 0;
+        this.rotation = 0;
 
-    this.findWheels();
-
-}
-
-);
-
+        this.findWheels();
 
     }
 
