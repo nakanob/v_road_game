@@ -314,12 +314,12 @@ export class Vehicle {
         if (!this.model) return;
 
         this.pivot.position.copy(this.position);
-        
+        const tireCompression = 0.03;
         this.model.position.set(
         
             0,
         
-            this.groundOffset,
+            this.groundOffset - tireCompression,
         
             0
         
