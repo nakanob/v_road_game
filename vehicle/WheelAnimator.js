@@ -13,22 +13,18 @@ export class WheelAnimator {
             frontLeft: null,
             frontRight: null,
             rearLeft: null,
-            rearRight: null
+        rearRight: null
 
-        };
+    };
 
-        this.rotation = 0;
+    this.rotation = 0;
 
-        this.findWheels();
-        this.originalRotation.set(
+    this.findWheels();
 
-    child,
-
-    child.rotation.clone()
+}
 
 );
-        this.originalRotation =
-        new WeakMap();
+
 
     }
 
@@ -148,26 +144,14 @@ export class WheelAnimator {
 
     }
 
-    updateWheel(
+updateWheel(wheel, steering) {
 
-        wheel,
+    if (!wheel) return;
 
-        steering
+    wheel.rotation.y = steering;
 
-    ) {
+    wheel.rotation.x = this.rotation;
 
-        if (!wheel) return;
-
-            onst original =
-            
-                this.originalRotation.get(wheel);
-            
-            wheel.rotation.copy(original);
-            
-            wheel.rotateY(steering);
-            
-            wheel.rotateX(this.rotation);
-
-    }
+}
 
 }
