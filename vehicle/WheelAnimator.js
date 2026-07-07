@@ -144,14 +144,14 @@ export class WheelAnimator {
 
     }
 
-updateWheel(wheel, steering) {
-
-    if (!wheel) return;
-
-    wheel.rotation.y = steering;
-
-    wheel.rotation.x = this.rotation;
-
-}
+    updateWheel(wheel, steering) {
+    
+        if (!wheel) return;
+    
+        wheel.rotation.y = steering;
+    
+        wheel.rotation.x = this.rotation;
+    
+    }
 
 }
