@@ -160,7 +160,7 @@ export class Vehicle {
                 targetWidth / size.x;
             
             this.model.scale.setScalar(scale);
-            
+            this.model.rotation.x = -Math.PI / 2;
             // 再取得
             box.setFromObject(this.model);
             
