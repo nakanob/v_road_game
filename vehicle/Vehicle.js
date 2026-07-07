@@ -31,6 +31,28 @@ export class Vehicle {
         this.loader = new GLTFLoader();
 
         this.model = null;
+        // モデル寸法
+        this.dimensions = {
+        
+            width: 0,
+        
+            height: 0,
+        
+            length: 0
+        
+        };
+        
+        // GroundPivot補正
+        this.groundOffset = 0;
+        
+        // ホイール位置
+        this.wheelBase = 0;
+        
+        this.trackWidth = 0;
+        
+        this.frontAxleOffset = 0;
+        
+        this.rearAxleOffset = 0;
         this.dimensions = {
         
             width: 4.75,
@@ -118,14 +140,45 @@ export class Vehicle {
             }
 
             this.model = model;
-
-            this.model.scale.setScalar(150);
+            //------------------------------------
+            // モデルサイズ取得
+            //------------------------------------
             
-this.pivot = new THREE.Group();
+            const box = new THREE.Box3().setFromObject(
+                this.model
+            );
+            
+            const size = new THREE.Vector3();
+            
+            box.getSize(size);
+            
+            // 本番車両の横幅(m)
+            const targetWidth = 2.35;
+            
+            // GLBを実車サイズへ合わせる
+            const scale =
+                targetWidth / size.x;
+            
+            this.model.scale.setScalar(scale);
+            
+            // 再取得
+            box.setFromObject(this.model);
+            
+            box.getSize(size);
+            
+            // 保存
+            this.dimensions.width = size.x;
+            
+            this.dimensions.height = size.y;
+            
+            this.dimensions.length = size.z;
 
-this.scene.add(this.pivot);
-
-this.pivot.add(this.model);
+            
+            this.pivot = new THREE.Group();
+            
+            this.scene.add(this.pivot);
+            
+            this.pivot.add(this.model);
             
             this.model.updateMatrixWorld(true);
             const box = new THREE.Box3().setFromObject(this.model);
