@@ -1,0 +1,386 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #071013;
+    font-family: Inter, Arial, Helvetica, sans-serif;
+}
+
+#game {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+#hud {
+
+    position: fixed;
+
+    top: max(14px, env(safe-area-inset-top));
+
+    left: max(14px, env(safe-area-inset-left));
+
+    z-index: 999;
+
+    color: #ffffff;
+
+    font-family: monospace;
+
+    user-select: none;
+
+}
+
+#hud-panel {
+
+    background: rgba(7, 13, 16, 0.58);
+
+    padding: 10px 14px;
+
+    border-radius: 8px;
+
+    border: 1px solid rgba(255, 255, 255, 0.16);
+
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+
+    line-height: 1.65;
+
+    min-width: 170px;
+
+}
+#speedometer {
+
+    position: fixed;
+
+    right: max(20px, env(safe-area-inset-right));
+
+    bottom: max(20px, env(safe-area-inset-bottom));
+
+    width: 148px;
+
+    height: 148px;
+
+    border-radius: 50%;
+
+    border: 4px solid rgba(255, 255, 255, 0.9);
+
+    background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.13), rgba(7, 13, 16, 0.62));
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: #ffffff;
+
+    font-family: Arial, sans-serif;
+
+    user-select: none;
+
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28);
+
+}
+
+#speedometer-value {
+
+    font-size: 44px;
+
+    font-weight: bold;
+
+    line-height: 1;
+
+}
+
+#speedometer-unit {
+
+    margin-top: 8px;
+
+    font-size: 18px;
+
+    opacity: 0.8;
+
+}
+#minimap {
+
+    position: fixed;
+
+    top: max(18px, env(safe-area-inset-top));
+
+    right: max(18px, env(safe-area-inset-right));
+
+    width: 180px;
+
+    height: 180px;
+
+    border: 2px solid rgba(255, 255, 255, 0.86);
+
+    border-radius: 8px;
+
+    overflow: hidden;
+
+    background: rgba(7, 13, 16, 0.4);
+
+    z-index: 1000;
+
+    pointer-events: none;
+
+}
+#loading-screen{
+
+    position:fixed;
+
+    inset:0;
+
+    background:#111;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:99999;
+
+    transition:.6s;
+
+}
+
+#loading-title{
+
+    color:#fff;
+
+    font-size:42px;
+
+    margin-bottom:40px;
+
+    letter-spacing:4px;
+
+}
+
+#loading-text{
+
+    color:#fff;
+
+    margin-bottom:15px;
+
+}
+
+#loading-bar{
+
+    width:420px;
+
+    height:12px;
+
+    background:#333;
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+}
+
+#loading-progress{
+
+    width:0;
+
+    height:100%;
+
+    background:#37d65c;
+
+    transition:.2s;
+
+}
+#title-screen{
+
+    position:fixed;
+
+    inset:0;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:linear-gradient(#5fa8ff,#d9f2ff);
+
+    z-index:99998;
+
+    transition:.5s;
+
+}
+
+#title-logo{
+
+    font-size:64px;
+
+    font-weight:bold;
+
+    color:#fff;
+
+    margin-bottom:50px;
+
+    text-shadow:0 4px 10px rgba(0,0,0,.35);
+
+}
+
+#start-button{
+
+    width:240px;
+
+    height:70px;
+
+    font-size:28px;
+
+    cursor:pointer;
+
+    border:none;
+
+    border-radius:12px;
+
+}
+#pause-menu{
+
+    position:fixed;
+
+    inset:0;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:rgba(0,0,0,.55);
+
+    z-index:99999;
+
+}
+
+#pause-title{
+
+    font-size:60px;
+
+    color:#fff;
+
+    margin-bottom:40px;
+
+    font-weight:bold;
+
+}
+
+#resume-button{
+
+    width:220px;
+
+    height:64px;
+
+    font-size:24px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+}
+#lap-hud{
+
+    position:fixed;
+
+    top:20px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    min-width:220px;
+
+    padding:9px 16px;
+
+    border-radius:8px;
+
+    background:rgba(7,13,16,.58);
+
+    border:1px solid rgba(255,255,255,.16);
+
+    color:#fff;
+
+    text-align:center;
+
+    font-family:Arial,sans-serif;
+
+    font-size:17px;
+
+    font-weight:bold;
+
+    line-height:1.6;
+
+    z-index:1000;
+
+    user-select:none;
+
+}
+
+@media (max-width: 720px) {
+
+    #hud-panel {
+        min-width: 136px;
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    #minimap {
+        width: 132px;
+        height: 132px;
+    }
+
+    #speedometer {
+        width: 104px;
+        height: 104px;
+        border-width: 3px;
+    }
+
+    #speedometer-value {
+        font-size: 32px;
+    }
+
+    #speedometer-unit {
+        margin-top: 4px;
+        font-size: 13px;
+    }
+
+    #lap-hud {
+        top: auto;
+        bottom: max(16px, env(safe-area-inset-bottom));
+        min-width: 168px;
+        max-width: calc(100vw - 150px);
+        padding: 7px 10px;
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+}
