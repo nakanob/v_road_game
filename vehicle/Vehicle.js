@@ -178,9 +178,19 @@ export class Vehicle {
             
             box.getCenter(center);
             
-            // タイヤが地面へ接地する高さ
+            // モデル中心
+            const center =
+                new THREE.Vector3();
+            
+            box.getCenter(center);
+            
+            // タイヤ半径を推定
+            const wheelRadius =
+                this.dimensions.height * 0.17;
+            
+            // GroundOffset
             this.groundOffset =
-                -box.min.y;
+                wheelRadius - box.min.y;
 
             // 前後ホイール位置
             this.wheelBase =
