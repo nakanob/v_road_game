@@ -11,11 +11,17 @@ export class WheelAnimator {
         this.wheels = {
 
             frontLeft: null,
+
             frontRight: null,
+
             rearLeft: null,
-        rearRight: null
+
+            rearRight: null
 
         };
+
+        this.originalRotation =
+            new WeakMap();
 
         this.rotation = 0;
 
@@ -28,53 +34,70 @@ export class WheelAnimator {
         if (!this.vehicle.model) return;
 
         this.vehicle.model.traverse((child) => {
-            const name = child.name.toLowerCase();
+
+            if (!child.isObject3D) return;
+
+            const name =
+                child.name.toLowerCase();
+
             if (
-            
+
                 name.includes("wheel") &&
-            
                 name.includes("fl")
-            
-            ){
-            
+
+            ) {
+
                 this.wheels.frontLeft = child;
-            
+
             }
-            
+
             else if (
-            
+
                 name.includes("wheel") &&
-            
                 name.includes("fr")
-            
-            ){
-            
+
+            ) {
+
                 this.wheels.frontRight = child;
-            
+
             }
-            
+
             else if (
-            
+
                 name.includes("wheel") &&
-            
                 name.includes("rl")
-            
-            ){
-            
+
+            ) {
+
                 this.wheels.rearLeft = child;
-            
+
             }
-            
+
             else if (
-            
+
                 name.includes("wheel") &&
-            
                 name.includes("rr")
-            
-            ){
-            
+
+            ) {
+
                 this.wheels.rearRight = child;
-            
+
+            }
+
+            if (
+
+                name.includes("wheel")
+
+            ) {
+
+                this.originalRotation.set(
+
+                    child,
+
+                    child.rotation.clone()
+
+                );
+
             }
 
         });
@@ -93,13 +116,17 @@ export class WheelAnimator {
 
         }
 
+        const wheelRadius =
+
+            this.vehicle.dimensions.height * 0.17;
+
+        const distance =
+
+            this.vehicle.speed * delta;
+
         this.rotation +=
 
-            this.vehicle.speed *
-
-            delta *
-
-            1.8;
+            distance / wheelRadius;
 
         const steer =
 
@@ -139,14 +166,44 @@ export class WheelAnimator {
 
     }
 
-    updateWheel(wheel, steering) {
-    
+    updateWheel(
+
+        wheel,
+
+        steering
+
+    ) {
+
         if (!wheel) return;
-    
-        wheel.rotation.y = steering;
-    
-        wheel.rotation.x = this.rotation;
-    
+
+        const original =
+
+            this.originalRotation.get(
+
+                wheel
+
+            );
+
+        if (!original) return;
+
+        wheel.rotation.copy(
+
+            original
+
+        );
+
+        wheel.rotateY(
+
+            steering
+
+        );
+
+        wheel.rotateX(
+
+            this.rotation
+
+        );
+
     }
 
 }
