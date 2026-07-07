@@ -34,105 +34,118 @@ export class TireTrack {
 
     }
 
-    update() {
-    
-        console.log("TireTrack update");
-    
-        if (!this.vehicle.model) return;
+update() {
 
-        const forward = new THREE.Vector3(
+    if (!this.vehicle.model) return;
 
-            Math.sin(this.vehicle.direction),
+    if (Math.abs(this.vehicle.speed) < 1) return;
 
-            0,
+    const forward = new THREE.Vector3(
 
-            Math.cos(this.vehicle.direction)
+        Math.sin(this.vehicle.direction),
+
+        0,
+
+        Math.cos(this.vehicle.direction)
+
+    );
+
+    const right = new THREE.Vector3(
+
+        forward.z,
+
+        0,
+
+        -forward.x
+
+    );
+
+    // Vehicle.js の自動計算値を利用
+    const leftOffset =
+
+        -this.vehicle.trackWidth * 0.5;
+
+    const rightOffset =
+
+        this.vehicle.trackWidth * 0.5;
+
+    const rear =
+
+        forward.clone().multiplyScalar(
+
+            -this.vehicle.rearAxleOffset
 
         );
-        // 車幅・ホイール位置（Vehicle.jsで自動取得）
-        const trackWidth =
-            this.vehicle.trackWidth * 0.5;
-        
-        const rearOffset =
-            this.vehicle.rearAxleOffset;
-        
-        this.trackWidth =
-            this.vehicle.dimensions.width * 0.42;
-        
-            const leftOffset =
-                -trackWidth;
-            
-            const rightOffset =
-                trackWidth;
-        const right = new THREE.Vector3(
 
-            forward.z,
+    const leftPos =
 
-            0,
+        this.vehicle.position.clone()
 
-            -forward.x
+            .add(rear)
 
-        );
-
-        const rearDirection = forward.clone().multiplyScalar(
-        
-            -rearOffset
-        
-        );
-        
-        // 左後輪
-        const leftPos = this.vehicle.position.clone()
-        
-            .add(rearDirection)
-        
             .add(
-        
-                right.clone().multiplyScalar(leftOffset)
-        
-        );
-        
-        // 右後輪
-        const rightPos = this.vehicle.position.clone()
-        
-            .add(rearDirection)
-        
+
+                right.clone().multiplyScalar(
+
+                    leftOffset
+
+                )
+
+            );
+
+    const rightPos =
+
+        this.vehicle.position.clone()
+
+            .add(rear)
+
             .add(
-        
-                right.clone().multiplyScalar(rightOffset)
-        
-        );
 
-leftPos.y =
-    this.vehicle.terrain.getHeight(
-        leftPos.x,
-        leftPos.z
-    ) + 0.03;
+                right.clone().multiplyScalar(
 
-rightPos.y =
-    this.vehicle.terrain.getHeight(
-        rightPos.x,
-        rightPos.z
-    ) + 0.03;
+                    rightOffset
 
-//console.log("width", this.vehicle.dimensions.width);
+                )
 
-//console.log("rear", this.vehicle.rearAxleOffset);
+            );
 
-//console.log("LEFT", leftPos);
+    leftPos.y =
 
-//console.log("RIGHT", rightPos);
-        
-        this.createSegment(
-            leftPos,
-            "left"
-        );
+        this.vehicle.terrain.getHeight(
 
-        this.createSegment(
-            rightPos,
-            "right"
-        );
+            leftPos.x,
 
-    }
+            leftPos.z
+
+        ) + 0.03;
+
+    rightPos.y =
+
+        this.vehicle.terrain.getHeight(
+
+            rightPos.x,
+
+            rightPos.z
+
+        ) + 0.03;
+
+    this.createSegment(
+
+        leftPos,
+
+        "left"
+
+    );
+
+    this.createSegment(
+
+        rightPos,
+
+        "right"
+
+    );
+
+}
 
     createSegment(position, side) {
 
@@ -177,6 +190,83 @@ rightPos.y =
                 0.25,
                 length
             );
+        const up = new THREE.Vector3(
+        
+            0,
+        
+            1,
+        
+            0
+        
+        );
+        
+        const dir =
+        
+            position.clone()
+        
+                .sub(previous)
+        
+                .normalize();
+        
+        const right =
+        
+            new THREE.Vector3()
+        
+                .crossVectors(
+        
+                    up,
+        
+                    dir
+        
+                )
+        
+                .normalize();
+        
+        const normal =
+        
+            new THREE.Vector3(
+        
+                0,
+        
+                0,
+        
+                0
+        
+            );
+        
+        normal.add(
+        
+            new THREE.Vector3(
+        
+                0,
+        
+                1,
+        
+                0
+        
+            )
+        
+        );
+        
+        const basis =
+        
+            new THREE.Matrix4();
+        
+        basis.makeBasis(
+        
+            right,
+        
+            normal,
+        
+            dir
+        
+        );
+        
+        mesh.quaternion.setFromRotationMatrix(
+        
+            basis
+        
+        );
 
         const mesh =
             new THREE.Mesh(
@@ -201,17 +291,8 @@ rightPos.y =
 
         );
 
-        mesh.rotation.x =
-            -Math.PI / 2;
+        
 
-        mesh.rotation.z =
-            Math.atan2(
-
-                position.x - previous.x,
-
-                position.z - previous.z
-
-            );
 
         this.group.add(mesh);
 
