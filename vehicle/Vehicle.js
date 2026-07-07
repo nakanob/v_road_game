@@ -232,12 +232,7 @@ export class Vehicle {
             this.model.updateMatrixWorld(true);
 
 
-            
-            this.dimensions.width = size.x;
-            
-            this.dimensions.height = size.y;
-            
-            this.dimensions.length = size.z;
+
 
             // 車長からホイールベースを推定
             this.wheelBase = this.dimensions.length * 0.62;
