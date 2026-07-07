@@ -1,4 +1,5 @@
 // vehicle/Vehicle.js
+// ====== Part 1 / 3 ======
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
 
@@ -11,9 +12,6 @@ import { WheelAnimator } from "./WheelAnimator.js";
 import { EngineSound } from "./EngineSound.js";
 import { VehicleReset } from "./VehicleReset.js";
 
-
-
-
 export class Vehicle {
 
     constructor(sceneManager) {
@@ -21,62 +19,14 @@ export class Vehicle {
         this.sceneManager = sceneManager;
         this.scene = sceneManager.scene;
         this.terrain = sceneManager.terrain;
-
         this.assetLoader = sceneManager.assetLoader;
-
-        this.input = new InputManager();
-        this.controller =
-            new VehicleController(this);
 
         this.loader = new GLTFLoader();
 
         this.model = null;
-        // モデル寸法
-        this.dimensions = {
-        
-            width: 0,
-        
-            height: 0,
-        
-            length: 0
-        
-        };
-        
-        // GroundPivot補正
-        this.groundOffset = 0;
-        
-        // ホイール位置
-        this.wheelBase = 0;
-        
-        this.trackWidth = 0;
-        
-        this.frontAxleOffset = 0;
-        
-        this.rearAxleOffset = 0;
-        this.dimensions = {
-        
-            width: 4.75,
-        
-            length: 10.9,
-        
-            height: 3.1
-        
-        };
-        
-        // 前後タイヤ中心距離
-        this.wheelBase = 6.2;
-        
-        // 左右タイヤ中心距離
-        this.trackWidth = 2.1;
-        
-        // 後輪中心までの距離
-        this.rearAxleOffset =
-            this.wheelBase * 0.5;
-        
-        this.wheelBase = 0;
+        this.pivot = null;
 
-        this.rearAxleOffset = 0;
-        
+        this.input = new InputManager();
 
         this.position = new THREE.Vector3(
             0,
@@ -85,7 +35,6 @@ export class Vehicle {
         );
 
         this.direction = 0;
-
         this.speed = 0;
 
         this.maxSpeed = 35;
@@ -93,23 +42,49 @@ export class Vehicle {
         this.brakePower = 32;
         this.friction = 8;
 
-        this.steering = THREE.MathUtils.degToRad(90);
+        this.steering =
+            THREE.MathUtils.degToRad(90);
 
-        this.load();
-        this.suspension =
-        new Suspension(this);
-        
-        this.wheelAnimator =
-        new WheelAnimator(this);
+        this.dimensions = {
 
-        this.engineSound =
-        new EngineSound(this);
-        
-        this.vehicleReset =
-        new VehicleReset(this);
+            width: 0,
+
+            height: 0,
+
+            length: 0
+
+        };
+
+        this.groundOffset = 0;
+
+        this.wheelBase = 0;
+
+        this.trackWidth = 0;
+
+        this.frontAxleOffset = 0;
+
+        this.rearAxleOffset = 0;
+
         this.headLights = [];
+
         this.tailLights = [];
 
+        this.controller =
+            new VehicleController(this);
+
+        this.suspension =
+            new Suspension(this);
+
+        this.wheelAnimator =
+            new WheelAnimator(this);
+
+        this.engineSound =
+            new EngineSound(this);
+
+        this.vehicleReset =
+            new VehicleReset(this);
+
+        this.load();
 
     }
 
@@ -118,9 +93,9 @@ export class Vehicle {
         try {
 
             let model =
-            this.assetLoader.getModel(
-                "vehicle"
-            );
+                this.assetLoader.getModel(
+                    "vehicle"
+                );
 
             if (!model) {
 
@@ -135,139 +110,173 @@ export class Vehicle {
                 model =
                     this.assetLoader.getModel(
                         "vehicle"
-                );
+                    );
 
             }
 
             this.model = model;
-            //------------------------------------
-            // モデルサイズ取得
-            //------------------------------------
-            
-            const box = new THREE.Box3().setFromObject(
-                this.model
-            );
-            
-            const size = new THREE.Vector3();
-            
+
+            //----------------------------------
+            // 実車サイズへ自動スケール
+            //----------------------------------
+
+            const box =
+                new THREE.Box3()
+                    .setFromObject(
+                        this.model
+                    );
+
+            const size =
+                new THREE.Vector3();
+
             box.getSize(size);
-            
-            // 本番車両の横幅(m)
+
             const targetWidth = 2.35;
-            
-            // GLBを実車サイズへ合わせる
+
             const scale =
                 targetWidth / size.x;
-            
+
             this.model.scale.setScalar(scale);
-            this.model.rotation.x = -Math.PI / 2;
-            // 再取得
+
+            this.model.updateMatrixWorld(true);
+
             box.setFromObject(this.model);
-            
+
             box.getSize(size);
-            
-            // 保存
-            this.dimensions.width = size.x;
-            
-            this.dimensions.height = size.y;
-            
-            this.dimensions.length = size.z;
 
+            this.dimensions.width =
+                size.x;
 
-            
-            // モデル中心
-            const center =
-                new THREE.Vector3();
-            
-            box.getCenter(center);
-            
-            // タイヤ半径を推定
+            this.dimensions.height =
+                size.y;
+
+            this.dimensions.length =
+                size.z;
+
+            //----------------------------------
+            // GroundPivot生成
+            //----------------------------------
+
+            this.pivot =
+                new THREE.Group();
+
+            this.scene.add(
+                this.pivot
+            );
+
+            this.pivot.add(
+                this.model
+            );
+
+            //----------------------------------
+            // GroundOffset
+            //----------------------------------
+
             const wheelRadius =
                 this.dimensions.height * 0.17;
-            
-            // GroundOffset
+
             this.groundOffset =
                 wheelRadius - box.min.y;
 
-            // 前後ホイール位置
+            //----------------------------------
+            // 車両寸法
+            //----------------------------------
+
             this.wheelBase =
-                this.dimensions.length * 0.58;
-            
-            // 左右ホイール位置
+                this.dimensions.length * 0.60;
+
             this.trackWidth =
                 this.dimensions.width * 0.84;
-            
+
             this.frontAxleOffset =
                 this.wheelBase * 0.5;
-            
 
-            console.log("Vehicle Size");
-            
+            this.rearAxleOffset =
+                this.wheelBase * 0.5;
+
+            console.log("Vehicle");
+
             console.log(this.dimensions);
-            
-            console.log("GroundOffset");
-            
+
+            console.log("Ground");
+
             console.log(this.groundOffset);
-            
+
             console.log("WheelBase");
-            
+
             console.log(this.wheelBase);
-            
-            console.log("TrackWidth");
-            
+
+            console.log("Track");
+
             console.log(this.trackWidth);
+            //----------------------------------
+            // GroundPivotへ追加
+            //----------------------------------
 
+            this.model.position.set(
 
-            
-            this.pivot = new THREE.Group();
-            
-            this.scene.add(this.pivot);
-            
-            this.pivot.add(this.model);
-            
-            this.model.updateMatrixWorld(true);
+                0,
 
+                this.groundOffset,
 
+                0
 
+            );
 
-            // 車長からホイールベースを推定
-            this.wheelBase = this.dimensions.length * 0.62;
-            
-            // 車体中心から後輪までの距離
-            this.rearAxleOffset = this.wheelBase * 0.5;
-            
-            this.groundOffset = -box.min.y;
-            
-            console.log(this.dimensions);
-            
-            console.log(this.groundOffset);
+            this.model.rotation.set(
+
+                0,
+
+                0,
+
+                0
+
+            );
+
+            //----------------------------------
+            // 影設定
+            //----------------------------------
 
             this.model.traverse((child) => {
 
-                if (child.isMesh) {
+                if (!child.isMesh) return;
 
-                    child.castShadow = true;
+                child.castShadow = true;
 
-                    child.receiveShadow = true;
-
-                }
+                child.receiveShadow = true;
 
             });
 
-  //          this.scene.add(this.model);
+            //----------------------------------
+            // 初期位置
+            //----------------------------------
 
             this.position.set(
+
                 0,
+
                 20,
+
                 0
+
             );
 
+            //----------------------------------
+            // 初回更新
+            //----------------------------------
+
             this.updateTransform();
+
             this.createLights();
+
         }
+
         catch (error) {
-           console.error(error);
+
+            console.error(error);
+
         }
+
     }
 
     update(delta) {
@@ -275,184 +284,258 @@ export class Vehicle {
         if (!this.model) return;
 
         this.controller.update(delta);
-        
+
         this.wheelAnimator.update(delta);
 
         this.suspension.update(delta);
 
+        this.position.y =
+
+            this.terrain.getHeight(
+
+                this.position.x,
+
+                this.position.z
+
+            );
+
         this.updateTransform();
 
         this.engineSound.update();
+
         this.updateLights();
-        this.position.y =
-        this.terrain.getHeight(
-            this.position.x,
-            this.position.z
-        );
 
     }
 
-
-    
     updateTransform() {
-    
+
         if (!this.model) return;
-    
-        // 車全体の位置
-        this.pivot.position.copy(this.position);
-    
-        // 車全体の向き
-        this.pivot.rotation.y = this.direction;
-    
+
+        //----------------------------------
+        // Pivot
+        //----------------------------------
+
+        this.pivot.position.copy(
+
+            this.position
+
+        );
+
+        this.pivot.rotation.y =
+
+            this.direction;
+
+        //----------------------------------
+        // サスペンション
+        //----------------------------------
+
         const tireCompression = 0.03;
-    
-        // モデルはPivot内で高さだけ調整
+
         this.model.position.set(
-    
+
             0,
-    
-            this.groundOffset - tireCompression,
-    
+
+            this.groundOffset -
+
+            tireCompression,
+
             0
-    
+
         );
-    
-        // モデルにはサスペンションだけ
+
         this.model.rotation.set(
-    
+
             this.suspension.pitch,
-    
+
             0,
-    
+
             this.suspension.roll
-    
+
         );
-    
+
     }
+
     createLights() {
 
-    const front =
-        this.dimensions.length * 0.48;
+        const front =
 
-    const rear =
-        this.dimensions.length * 0.48;
+            this.dimensions.length * 0.48;
 
-    const halfWidth =
-        this.dimensions.width * 0.42;
+        const rear =
 
-    const lightHeight =
-        this.dimensions.height * 0.45;
+            this.dimensions.length * 0.48;
 
-    // 左ヘッドライト
-    this.createHeadLight(
-        -halfWidth,
-        lightHeight,
-        front
-    );
+        const halfWidth =
 
-    // 右ヘッドライト
-    this.createHeadLight(
-        halfWidth,
-        lightHeight,
-        front
-    );
+            this.trackWidth * 0.5;
 
-    // 左テールランプ
-    this.createTailLight(
-        -halfWidth,
-        lightHeight,
-        -rear
-    );
+        const lightHeight =
 
-    // 右テールランプ
-    this.createTailLight(
-        halfWidth,
-        lightHeight,
-        -rear
-    );
+            this.dimensions.height * 0.45;
 
-}
-createHeadLight(x, y, z) {
+        this.createHeadLight(
 
-    const light =
-        new THREE.SpotLight(
-            0xffffff,
-            0
+            -halfWidth,
+
+            lightHeight,
+
+            front
+
         );
 
-    light.distance = 80;
-    light.angle = 0.35;
-    light.penumbra = 0.5;
-    light.decay = 2;
+        this.createHeadLight(
 
-    light.position.set(x, y, z);
+            halfWidth,
 
-    light.target.position.set(
-        x,
-        y - 0.2,
-        z + 30
-    );
+            lightHeight,
 
-    this.pivot.add(light);
+            front
 
-    this.model.add(light.target);
-
-    this.pivot.add(light.target);
-
-}
-createTailLight(x, y, z) {
-
-    const geometry =
-        new THREE.SphereGeometry(
-            0.08,
-            12,
-            12
         );
 
-    const material =
-        new THREE.MeshBasicMaterial({
+        this.createTailLight(
 
-            color: 0xff2020
+            -halfWidth,
 
-        });
+            lightHeight,
 
-    const mesh =
-        new THREE.Mesh(
-            geometry,
-            material
+            -rear
+
         );
 
-    mesh.position.set(
-        x,
-        y,
-        z
-    );
+        this.createTailLight(
 
-    mesh.visible = false;
+            halfWidth,
 
-    this.pivot.add(mesh);
+            lightHeight,
 
-    this.tailLights.push(mesh);
-}
-updateLights() {
+            -rear
 
-    const isNight =
-        this.sceneManager.sun
-            ? this.sceneManager.sun.isNight
-            : false;
-
-    for (const light of this.headLights) {
-
-        light.intensity =
-            isNight ? 35 : 0;
+        );
 
     }
 
-    for (const lamp of this.tailLights) {
+    createHeadLight(x, y, z) {
 
-        lamp.visible = isNight;
+        const light =
+
+            new THREE.SpotLight(
+
+                0xffffff,
+
+                0
+
+            );
+
+        light.distance = 80;
+
+        light.angle = 0.35;
+
+        light.penumbra = 0.5;
+
+        light.decay = 2;
+
+        light.position.set(
+
+            x,
+
+            y,
+
+            z
+
+        );
+
+        light.target.position.set(
+
+            x,
+
+            y - 0.2,
+
+            z + 30
+
+        );
+
+        this.pivot.add(light);
+
+        this.pivot.add(light.target);
+
+        this.headLights.push(light);
+
+    }
+        createTailLight(x, y, z) {
+
+        const geometry =
+
+            new THREE.SphereGeometry(
+
+                0.08,
+
+                12,
+
+                12
+
+            );
+
+        const material =
+
+            new THREE.MeshBasicMaterial({
+
+                color: 0xff2020
+
+            });
+
+        const mesh =
+
+            new THREE.Mesh(
+
+                geometry,
+
+                material
+
+            );
+
+        mesh.position.set(
+
+            x,
+
+            y,
+
+            z
+
+        );
+
+        mesh.visible = false;
+
+        this.pivot.add(mesh);
+
+        this.tailLights.push(mesh);
 
     }
 
-}
+    updateLights() {
+
+        const isNight =
+
+            this.sceneManager.sun
+
+                ? this.sceneManager.sun.isNight
+
+                : false;
+
+        for (const light of this.headLights) {
+
+            light.intensity =
+
+                isNight ? 35 : 0;
+
+        }
+
+        for (const lamp of this.tailLights) {
+
+            lamp.visible = isNight;
+
+        }
+
+    }
+
 }
