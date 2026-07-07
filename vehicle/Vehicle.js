@@ -173,10 +173,7 @@ export class Vehicle {
             
             this.dimensions.length = size.z;
 
-            const center =
-                new THREE.Vector3();
-            
-            box.getCenter(center);
+
             
             // モデル中心
             const center =
