@@ -49,12 +49,21 @@ export class TireTrack {
             Math.cos(this.vehicle.direction)
 
         );
+        // 車幅・ホイール位置（Vehicle.jsで自動取得）
+        const trackWidth =
+            this.vehicle.trackWidth * 0.5;
+        
+        const rearOffset =
+            this.vehicle.rearAxleOffset;
+        
         this.trackWidth =
             this.vehicle.dimensions.width * 0.42;
         
-        const leftOffset = -this.trackWidth;
-        
-        const rightOffset = this.trackWidth;
+            const leftOffset =
+                -trackWidth;
+            
+            const rightOffset =
+                trackWidth;
         const right = new THREE.Vector3(
 
             forward.z,
@@ -67,7 +76,7 @@ export class TireTrack {
 
         const rearDirection = forward.clone().multiplyScalar(
         
-            -this.vehicle.rearAxleOffset
+            -rearOffset
         
         );
         
@@ -93,9 +102,17 @@ export class TireTrack {
         
         );
 
-leftPos.y += this.vehicle.groundOffset;
+leftPos.y =
+    this.vehicle.terrain.getHeight(
+        leftPos.x,
+        leftPos.z
+    ) + 0.03;
 
-rightPos.y += this.vehicle.groundOffset;
+rightPos.y =
+    this.vehicle.terrain.getHeight(
+        rightPos.x,
+        rightPos.z
+    ) + 0.03;
 
 //console.log("width", this.vehicle.dimensions.width);
 
