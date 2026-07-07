@@ -304,31 +304,39 @@ export class Vehicle {
 
     
     updateTransform() {
-
+    
         if (!this.model) return;
-
+    
+        // 車全体の位置
         this.pivot.position.copy(this.position);
+    
+        // 車全体の向き
+        this.pivot.rotation.y = this.direction;
+    
         const tireCompression = 0.03;
+    
+        // モデルはPivot内で高さだけ調整
         this.model.position.set(
-        
+    
             0,
-        
+    
             this.groundOffset - tireCompression,
-        
+    
             0
-        
+    
         );
-
+    
+        // モデルにはサスペンションだけ
         this.model.rotation.set(
-
+    
             this.suspension.pitch,
-
-            this.direction,
-
+    
+            0,
+    
             this.suspension.roll
-
+    
         );
-
+    
     }
     createLights() {
 
