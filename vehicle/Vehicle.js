@@ -230,7 +230,7 @@ export class Vehicle {
             this.pivot.add(this.model);
             
             this.model.updateMatrixWorld(true);
-            const box = new THREE.Box3().setFromObject(this.model);
+
 
             const size = new THREE.Vector3();
             
