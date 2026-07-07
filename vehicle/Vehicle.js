@@ -232,9 +232,6 @@ export class Vehicle {
             this.model.updateMatrixWorld(true);
 
 
-            const size = new THREE.Vector3();
-            
-            box.getSize(size);
             
             this.dimensions.width = size.x;
             
