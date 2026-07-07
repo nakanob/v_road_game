@@ -173,6 +173,48 @@ export class Vehicle {
             
             this.dimensions.length = size.z;
 
+            const center =
+                new THREE.Vector3();
+            
+            box.getCenter(center);
+            
+            // タイヤが地面へ接地する高さ
+            this.groundOffset =
+                -box.min.y;
+
+            // 前後ホイール位置
+            this.wheelBase =
+                this.dimensions.length * 0.58;
+            
+            // 左右ホイール位置
+            this.trackWidth =
+                this.dimensions.width * 0.84;
+            
+            this.frontAxleOffset =
+                this.wheelBase * 0.5;
+            
+            this.rearAxleOffset =
+                this.wheelBase * 0.5;
+
+            
+
+            console.log("Vehicle Size");
+            
+            console.log(this.dimensions);
+            
+            console.log("GroundOffset");
+            
+            console.log(this.groundOffset);
+            
+            console.log("WheelBase");
+            
+            console.log(this.wheelBase);
+            
+            console.log("TrackWidth");
+            
+            console.log(this.trackWidth);
+
+
             
             this.pivot = new THREE.Group();
             
