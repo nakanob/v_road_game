@@ -51,14 +51,64 @@ export class Suspension {
 
         );
 
-        const front = position.clone().add(
-
+        const frontCenter = position.clone().add(
+        
             forward.clone().multiplyScalar(
-
-                this.wheelBase * 0.5
-
+        
+                this.vehicle.frontAxleOffset
+        
             )
-
+        
+        );
+        
+        const rearCenter = position.clone().add(
+        
+            forward.clone().multiplyScalar(
+        
+                -this.vehicle.rearAxleOffset
+        
+            )
+        
+        );
+        
+        const frontLeft = frontCenter.clone().add(
+        
+            right.clone().multiplyScalar(
+        
+                -this.vehicle.trackWidth * 0.5
+        
+            )
+        
+        );
+        
+        const frontRight = frontCenter.clone().add(
+        
+            right.clone().multiplyScalar(
+        
+                this.vehicle.trackWidth * 0.5
+        
+            )
+        
+        );
+        
+        const rearLeft = rearCenter.clone().add(
+        
+            right.clone().multiplyScalar(
+        
+                -this.vehicle.trackWidth * 0.5
+        
+            )
+        
+        );
+        
+        const rearRight = rearCenter.clone().add(
+        
+            right.clone().multiplyScalar(
+        
+                this.vehicle.trackWidth * 0.5
+        
+            )
+        
         );
 
         const rear = position.clone().add(
@@ -91,25 +141,101 @@ export class Suspension {
 
         );
 
-        const frontHeight = this.terrain.getHeight(
-            front.x,
-            front.z
-        );
+        const frontHeight =
+        
+            (
+        
+                this.terrain.getHeight(
+        
+                    frontLeft.x,
+        
+                    frontLeft.z
+        
+                )
+        
+                +
+        
+                this.terrain.getHeight(
+        
+                    frontRight.x,
+        
+                    frontRight.z
+        
+                )
+        
+            ) * 0.5;
+        
+        const rearHeight =
+        
+            (
+        
+                this.terrain.getHeight(
+        
+                    rearLeft.x,
+        
+                    rearLeft.z
+        
+                )
+        
+                +
+        
+                this.terrain.getHeight(
+        
+                    rearRight.x,
+        
+                    rearRight.z
+        
+                )
+        
+            ) * 0.5;
 
-        const rearHeight = this.terrain.getHeight(
-            rear.x,
-            rear.z
-        );
-
-        const leftHeight = this.terrain.getHeight(
-            left.x,
-            left.z
-        );
-
-        const rightHeight = this.terrain.getHeight(
-            rightPos.x,
-            rightPos.z
-        );
+        const leftHeight =
+        
+            (
+        
+                this.terrain.getHeight(
+        
+                    frontLeft.x,
+        
+                    frontLeft.z
+        
+                )
+        
+                +
+        
+                this.terrain.getHeight(
+        
+                    rearLeft.x,
+        
+                    rearLeft.z
+        
+                )
+        
+            ) * 0.5;
+        
+        const rightHeight =
+        
+            (
+        
+                this.terrain.getHeight(
+        
+                    frontRight.x,
+        
+                    frontRight.z
+        
+                )
+        
+                +
+        
+                this.terrain.getHeight(
+        
+                    rearRight.x,
+        
+                    rearRight.z
+        
+                )
+        
+            ) * 0.5;
 
         const targetPitch = Math.atan2(
 
