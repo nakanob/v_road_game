@@ -77,7 +77,7 @@ export class Vehicle {
 
         this.rearAxleOffset = 0;
         
-        this.groundOffset = 0;
+
         this.position = new THREE.Vector3(
             0,
             0,
@@ -199,10 +199,6 @@ export class Vehicle {
             
             this.frontAxleOffset =
                 this.wheelBase * 0.5;
-            
-            this.rearAxleOffset =
-                this.wheelBase * 0.5;
-
             
 
             console.log("Vehicle Size");
