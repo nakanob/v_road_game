@@ -14,7 +14,7 @@ export class Snow {
 
         this.enabled = false;
 
-        this.count = 4000;
+        this.count = 1800;
 
         this.area = 180;
 
@@ -90,6 +90,8 @@ export class Snow {
 
             (event) => {
 
+                if (event.repeat) return;
+
                 if (event.code === "F6") {
 
                     this.enabled = !this.enabled;
@@ -122,13 +124,15 @@ export class Snow {
 
             this.geometry.attributes.position.array;
 
+        const time = performance.now() * 0.001;
+
         for (let i = 0; i < this.count; i++) {
 
             positions[i * 3] +=
 
                 Math.sin(
 
-                    performance.now() * 0.001 +
+                    time +
 
                     i
 

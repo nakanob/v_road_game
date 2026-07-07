@@ -15,6 +15,7 @@ export class CollisionManager {
         this.rockGenerator = sceneManager.rockGenerator;
 
         this.vehicleRadius = 1.2;
+        this.tmp = new THREE.Vector3();
 
     }
 
@@ -22,17 +23,17 @@ export class CollisionManager {
 
         if (!this.vehicle.model) return;
 
-        this.checkGroup(
+        this.checkPoints(
 
-            this.treeGenerator.group,
+            this.treeGenerator.collisionPoints,
 
             2.0
 
         );
 
-        this.checkGroup(
+        this.checkPoints(
 
-            this.rockGenerator.group,
+            this.rockGenerator.collisionPoints,
 
             2.2
 
@@ -40,31 +41,31 @@ export class CollisionManager {
 
     }
 
-    checkGroup(group, radius) {
+    checkPoints(points, radius) {
 
-        for (const object of group.children) {
+        const hitRadius =
+            radius + this.vehicleRadius;
+        const hitRadiusSq = hitRadius * hitRadius;
 
-            const distance =
+        for (const point of points) {
 
-                object.position.distanceTo(
+            this.tmp.subVectors(
+                this.vehicle.position,
+                point
+            );
+            this.tmp.y = 0;
 
-                    this.vehicle.position
-
-                );
+            const distanceSq = this.tmp.lengthSq();
 
             if (
 
-                distance <
-
-                radius +
-
-                this.vehicleRadius
+                distanceSq < hitRadiusSq
 
             ) {
 
                 this.resolveCollision(
 
-                    object.position,
+                    point,
 
                     radius
 

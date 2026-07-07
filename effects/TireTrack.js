@@ -16,6 +16,8 @@ export class TireTrack {
         this.trackWidth = 0;
 
         this.distanceThreshold = 0.6;
+        this.maxSegments = 220;
+        this.segments = [];
 
         this.lastLeft = null;
         this.lastRight = null;
@@ -190,6 +192,15 @@ update() {
                 0.25,
                 length
             );
+
+        const mesh =
+            new THREE.Mesh(
+
+                geometry,
+
+                this.material
+
+            );
         const up = new THREE.Vector3(
         
             0,
@@ -256,9 +267,9 @@ update() {
         
             right,
         
-            normal,
+            dir,
         
-            dir
+            normal
         
         );
         
@@ -267,15 +278,6 @@ update() {
             basis
         
         );
-
-        const mesh =
-            new THREE.Mesh(
-
-                geometry,
-
-                this.material
-
-            );
 
         mesh.receiveShadow = true;
 
@@ -295,8 +297,16 @@ update() {
 
 
         this.group.add(mesh);
+        this.segments.push(mesh);
 
-        console.log("ADD", side, mesh.position);
+        while (this.segments.length > this.maxSegments) {
+
+            const oldSegment = this.segments.shift();
+
+            this.group.remove(oldSegment);
+            oldSegment.geometry.dispose();
+
+        }
 
         if (side === "left") {
 

@@ -194,21 +194,6 @@ export class Vehicle {
             this.rearAxleOffset =
                 this.wheelBase * 0.5;
 
-            console.log("Vehicle");
-
-            console.log(this.dimensions);
-
-            console.log("Ground");
-
-            console.log(this.groundOffset);
-
-            console.log("WheelBase");
-
-            console.log(this.wheelBase);
-
-            console.log("Track");
-
-            console.log(this.trackWidth);
             //----------------------------------
             // GroundPivotへ追加
             //----------------------------------

@@ -20,6 +20,7 @@ export class GrassGenerator {
         this.group.name = "Grass";
 
         this.bladeCount = 500;
+        this.dummy = new THREE.Object3D();
 
         this.create();
 
@@ -41,34 +42,6 @@ update(delta) {
             wind.strength
 
         ) * 0.12;
-
-    for (
-
-        let i = 0;
-
-        i < this.group.children.length;
-
-        i++
-
-    ) {
-
-        const grass =
-
-            this.group.children[i];
-
-        grass.rotation.z =
-
-            sway +
-
-            Math.sin(
-
-                i * 0.35 +
-
-                performance.now() * 0.002
-
-            ) * 0.05;
-
-        }
 
     }
     create() {
@@ -100,6 +73,16 @@ update(delta) {
 
             });
 
+        const mesh = new THREE.InstancedMesh(
+            geometry,
+            material,
+            this.bladeCount
+        );
+        mesh.castShadow = false;
+        mesh.receiveShadow = true;
+
+        let instanceIndex = 0;
+
         for (
 
             let i = 0;
@@ -109,14 +92,6 @@ update(delta) {
             i++
 
         ) {
-
-            const mesh = new THREE.Mesh(
-
-                geometry,
-
-                material
-
-            );
 
             const x = this.random.range(
 
@@ -148,39 +123,19 @@ update(delta) {
 
             }
 
-            mesh.position.set(
-
+            this.dummy.position.set(
                 x,
-
                 y,
-
                 z
-
             );
 
-            mesh.rotation.y =
-
-                this.random.range(
-
-                    0,
-
-                    Math.PI * 2
-
-                );
-
-            mesh.rotation.z =
-
+            this.dummy.rotation.set(
+                0,
+                this.random.range(0, Math.PI * 2),
                 THREE.MathUtils.degToRad(
-
-                    this.random.range(
-
-                        -10,
-
-                        10
-
-                    )
-
-                );
+                    this.random.range(-10, 10)
+                )
+            );
 
             const scale =
 
@@ -192,23 +147,16 @@ update(delta) {
 
                 );
 
-            mesh.scale.setScalar(
-
-                scale
-
-            );
-
-            mesh.castShadow = false;
-
-            mesh.receiveShadow = true;
-
-            this.group.add(
-
-                mesh
-
-            );
+            this.dummy.scale.setScalar(scale);
+            this.dummy.updateMatrix();
+            mesh.setMatrixAt(instanceIndex, this.dummy.matrix);
+            instanceIndex++;
 
         }
+
+        mesh.count = instanceIndex;
+        mesh.instanceMatrix.needsUpdate = true;
+        this.group.add(mesh);
 
     }
 

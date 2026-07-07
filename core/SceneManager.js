@@ -55,7 +55,7 @@ export class SceneManager {
             60,
             window.innerWidth / window.innerHeight,
             0.1,
-            10000
+            3500
         );
 
         this.camera.position.set(0, 40, 80);
@@ -66,7 +66,10 @@ export class SceneManager {
         this.renderer.outputColorSpace =
             THREE.SRGBColorSpace;
 
-        this.renderer.setPixelRatio(window.devicePixelRatio);
+        const maxPixelRatio = window.innerWidth < 768 ? 1.25 : 1.5;
+        this.renderer.setPixelRatio(
+            Math.min(window.devicePixelRatio, maxPixelRatio)
+        );
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
         this.renderer.shadowMap.enabled = true;
@@ -226,8 +229,6 @@ export class SceneManager {
             this.water
         );
         this.bridge = new Bridge(this);
-        this.roadGenerator =
-            new RoadGenerator(this);
         this.roadSpline =
             new RoadSpline(this);
         
@@ -269,15 +270,15 @@ export class SceneManager {
 
     this.sunLight.castShadow = true;
 
-    this.sunLight.shadow.mapSize.width = 4096;
-    this.sunLight.shadow.mapSize.height = 4096;
+    this.sunLight.shadow.mapSize.width = 2048;
+    this.sunLight.shadow.mapSize.height = 2048;
 
-    this.sunLight.shadow.camera.left = -500;
-    this.sunLight.shadow.camera.right = 500;
-    this.sunLight.shadow.camera.top = 500;
-    this.sunLight.shadow.camera.bottom = -500;
+    this.sunLight.shadow.camera.left = -260;
+    this.sunLight.shadow.camera.right = 260;
+    this.sunLight.shadow.camera.top = 260;
+    this.sunLight.shadow.camera.bottom = -260;
     this.sunLight.shadow.camera.near = 0.5;
-    this.sunLight.shadow.camera.far = 1500;
+    this.sunLight.shadow.camera.far = 800;
 
     this.scene.add(this.sunLight);
 
@@ -359,6 +360,11 @@ export class SceneManager {
         this.renderer.setSize(
             window.innerWidth,
             window.innerHeight
+        );
+
+        const maxPixelRatio = window.innerWidth < 768 ? 1.25 : 1.5;
+        this.renderer.setPixelRatio(
+            Math.min(window.devicePixelRatio, maxPixelRatio)
         );
 
     }

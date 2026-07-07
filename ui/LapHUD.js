@@ -12,6 +12,8 @@ export class LapHUD {
         this.root = document.createElement("div");
 
         this.root.id = "lap-hud";
+        this.lastText = "";
+        this.elapsed = 0;
 
         document.body.appendChild(this.root);
 
@@ -19,7 +21,15 @@ export class LapHUD {
 
     }
 
-    update() {
+    update(delta = 1) {
+
+        this.elapsed += delta;
+
+        if (this.elapsed < 0.1) {
+            return;
+        }
+
+        this.elapsed = 0;
 
         const current = Math.min(
 
@@ -33,15 +43,27 @@ export class LapHUD {
 
             this.checkpointManager.checkpoints.length;
 
-        this.root.innerHTML = `
+        const checkpoint =
+            this.checkpointManager.checkpoints[
+                this.checkpointManager.currentCheckpoint
+            ];
 
-            CHECKPOINT
+        const distance = checkpoint
+            ? Math.round(
+                checkpoint.position.distanceTo(
+                    this.sceneManager.vehicle.position
+                )
+            )
+            : 0;
 
-            <br>
+        const text = `CHECKPOINT ${current} / ${total} - ${distance}m`;
 
-            ${current} / ${total}
+        if (text !== this.lastText) {
 
-        `;
+            this.root.textContent = text;
+            this.lastText = text;
+
+        }
 
     }
 

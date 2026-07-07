@@ -41,21 +41,30 @@ export class HUD {
         this.elapsed = 0;
 
         this.fps = 0;
+        this.fastElapsed = 0;
 
     }
 
     update(delta) {
 
-        this.speedElement.textContent =
+        this.fastElapsed += delta;
 
-            `Speed : ${Math.round(
-                Math.abs(this.vehicle.speed) * 3.6
-            )} km/h`;
+        if (this.fastElapsed >= 0.1) {
 
-        this.positionElement.textContent =
+            this.speedElement.textContent =
 
-            `X : ${this.vehicle.position.x.toFixed(1)}
-             Z : ${this.vehicle.position.z.toFixed(1)}`;
+                `Speed : ${Math.round(
+                    Math.abs(this.vehicle.speed) * 3.6
+                )} km/h`;
+
+            this.positionElement.textContent =
+
+                `X : ${this.vehicle.position.x.toFixed(1)}
+                 Z : ${this.vehicle.position.z.toFixed(1)}`;
+
+            this.fastElapsed = 0;
+
+        }
 
         this.frameCount++;
 

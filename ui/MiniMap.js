@@ -38,7 +38,7 @@ export class MiniMap {
         );
 
         this.renderer.setPixelRatio(
-            window.devicePixelRatio
+            Math.min(window.devicePixelRatio, 1.25)
         );
 
         this.renderer.domElement.id = "minimap";
@@ -47,11 +47,22 @@ export class MiniMap {
             this.renderer.domElement
         );
 
+        this.elapsed = 0;
+        this.updateRate = 1 / 12;
+
     }
 
-    update() {
+    update(delta) {
 
         if (!this.vehicle.model) return;
+
+        this.elapsed += delta;
+
+        if (this.elapsed < this.updateRate) {
+            return;
+        }
+
+        this.elapsed = 0;
 
         // 車の真上へ移動
         this.camera.position.set(

@@ -13,8 +13,8 @@ export class TerrainGenerator {
         this.depth = 2000;
 
         // 分割数
-        this.segmentsX = 400;
-        this.segmentsZ = 400;
+        this.segmentsX = 220;
+        this.segmentsZ = 220;
 
         // 地形パラメータ
         this.heightScale = 120;

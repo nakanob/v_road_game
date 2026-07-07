@@ -14,18 +14,21 @@ export class RockGenerator {
 
         this.random = new Random(2002);
 
-        this.rockCount = 400;
+        this.rockCount = 320;
 
-        this.group = new THREE.Group();
-        this.group.name = "Rocks";
+        this.dummy = new THREE.Object3D();
+        this.collisionPoints = [];
 
         this.create();
-
-        this.scene.add(this.group);
 
     }
 
     create() {
+
+        const geometry = new THREE.IcosahedronGeometry(
+            1,
+            1
+        );
 
         const material = new THREE.MeshStandardMaterial({
 
@@ -35,103 +38,68 @@ export class RockGenerator {
 
         });
 
+        this.mesh = new THREE.InstancedMesh(
+            geometry,
+            material,
+            this.rockCount
+        );
+
+        this.mesh.name = "Rocks";
+        this.mesh.castShadow = true;
+        this.mesh.receiveShadow = true;
+
+        let instanceIndex = 0;
+
         for (let i = 0; i < this.rockCount; i++) {
 
-            const radius =
-                this.random.range(0.4, 2.5);
-
-            const geometry =
-                new THREE.IcosahedronGeometry(
-                    radius,
-                    1
-                );
-
-            const rock = new THREE.Mesh(
-
-                geometry,
-
-                material
-
-            );
-
-            const x =
-                this.random.range(-990, 990);
-
-            const z =
-                this.random.range(-990, 990);
-
-            const y =
-                this.terrain.getHeight(x, z);
+            const radius = this.random.range(0.4, 2.5);
+            const x = this.random.range(-990, 990);
+            const z = this.random.range(-990, 990);
+            const y = this.terrain.getHeight(x, z);
 
             if (y < 8) {
-
-                geometry.dispose();
-
                 continue;
-
             }
 
-            rock.position.set(
+            this.collisionPoints.push(
+                new THREE.Vector3(x, y, z)
+            );
 
+            this.dummy.position.set(
                 x,
-
                 y + radius * 0.35,
-
                 z
-
             );
 
-            rock.rotation.set(
-
-                this.random.range(
-                    0,
-                    Math.PI
-                ),
-
-                this.random.range(
-                    0,
-                    Math.PI * 2
-                ),
-
-                this.random.range(
-                    0,
-                    Math.PI
-                )
-
+            this.dummy.rotation.set(
+                this.random.range(0, Math.PI),
+                this.random.range(0, Math.PI * 2),
+                this.random.range(0, Math.PI)
             );
 
-            rock.scale.set(
-
-                this.random.range(0.8, 1.5),
-
-                this.random.range(0.6, 1.4),
-
-                this.random.range(0.8, 1.5)
-
+            this.dummy.scale.set(
+                radius * this.random.range(0.8, 1.5),
+                radius * this.random.range(0.6, 1.4),
+                radius * this.random.range(0.8, 1.5)
             );
 
-            rock.castShadow = true;
-            rock.receiveShadow = true;
-
-            this.group.add(rock);
+            this.dummy.updateMatrix();
+            this.mesh.setMatrixAt(instanceIndex, this.dummy.matrix);
+            instanceIndex++;
 
         }
+
+        this.mesh.count = instanceIndex;
+        this.mesh.instanceMatrix.needsUpdate = true;
+        this.scene.add(this.mesh);
 
     }
 
     dispose() {
 
-        this.group.traverse((child) => {
-
-            if (child.isMesh) {
-
-                child.geometry.dispose();
-
-            }
-
-        });
-
-        this.scene.remove(this.group);
+        this.scene.remove(this.mesh);
+        this.mesh.geometry.dispose();
+        this.mesh.material.dispose();
 
     }
 

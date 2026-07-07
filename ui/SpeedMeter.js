@@ -23,10 +23,19 @@ export class SpeedMeter {
         this.container.appendChild(this.unit);
 
         document.body.appendChild(this.container);
+        this.elapsed = 0;
 
     }
 
-    update() {
+    update(delta) {
+
+        this.elapsed += delta;
+
+        if (this.elapsed < 0.08) {
+            return;
+        }
+
+        this.elapsed = 0;
 
         const speed = Math.abs(
             this.vehicle.speed * 3.6

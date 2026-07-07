@@ -18,6 +18,8 @@ export class WeatherManager {
 
             (event) => {
 
+                if (event.repeat) return;
+
                 switch (event.code) {
 
                     case "Digit1":

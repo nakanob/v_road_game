@@ -12,7 +12,7 @@ export class Rain {
 
         this.vehicle = sceneManager.vehicle;
 
-        this.count = 6000;
+        this.count = 2600;
 
         this.area = 180;
 
@@ -83,6 +83,8 @@ export class Rain {
             "keydown",
 
             (event) => {
+
+                if (event.repeat) return;
 
                 if (event.code === "F5") {
 

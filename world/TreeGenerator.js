@@ -18,6 +18,8 @@ export class TreeGenerator {
 
         this.group = new THREE.Group();
         this.group.name = "Trees";
+        this.dummy = new THREE.Object3D();
+        this.collisionPoints = [];
 
         this.create();
 
@@ -52,6 +54,24 @@ export class TreeGenerator {
 
         });
 
+        const trunkMesh = new THREE.InstancedMesh(
+            trunkGeometry,
+            trunkMaterial,
+            this.treeCount
+        );
+        const leafMesh = new THREE.InstancedMesh(
+            leafGeometry,
+            leafMaterial,
+            this.treeCount
+        );
+
+        trunkMesh.castShadow = true;
+        trunkMesh.receiveShadow = true;
+        leafMesh.castShadow = true;
+        leafMesh.receiveShadow = true;
+
+        let instanceIndex = 0;
+
         for (let i = 0; i < this.treeCount; i++) {
 
             const x = this.random.range(-980, 980);
@@ -65,64 +85,44 @@ export class TreeGenerator {
 
             }
 
-            const tree = new THREE.Group();
-
-            const trunk = new THREE.Mesh(
-
-                trunkGeometry,
-
-                trunkMaterial
-
-            );
-
-            trunk.position.y = 1.25;
-
-            trunk.castShadow = true;
-            trunk.receiveShadow = true;
-
-            tree.add(trunk);
-
-            const leaves = new THREE.Mesh(
-
-                leafGeometry,
-
-                leafMaterial
-
-            );
-
-            leaves.position.y = 4.2;
-
-            leaves.castShadow = true;
-            leaves.receiveShadow = true;
-
-            tree.add(leaves);
-
             const scale = this.random.range(0.8, 1.5);
-
-            tree.scale.setScalar(scale);
-
-            tree.position.set(
-
-                x,
-
-                y,
-
-                z
-
-            );
-
-            tree.rotation.y = this.random.range(
-
+            const rotationY = this.random.range(
                 0,
-
                 Math.PI * 2
-
             );
 
-            this.group.add(tree);
+            this.collisionPoints.push(
+                new THREE.Vector3(x, y, z)
+            );
 
+            this.dummy.position.set(
+                x,
+                y + 1.25 * scale,
+                z
+            );
+            this.dummy.rotation.set(0, rotationY, 0);
+            this.dummy.scale.setScalar(scale);
+            this.dummy.updateMatrix();
+            trunkMesh.setMatrixAt(instanceIndex, this.dummy.matrix);
+
+            this.dummy.position.set(
+                x,
+                y + 4.2 * scale,
+                z
+            );
+            this.dummy.updateMatrix();
+            leafMesh.setMatrixAt(instanceIndex, this.dummy.matrix);
+
+            instanceIndex++;
         }
 
+        trunkMesh.count = instanceIndex;
+        leafMesh.count = instanceIndex;
+        trunkMesh.instanceMatrix.needsUpdate = true;
+        leafMesh.instanceMatrix.needsUpdate = true;
+
+        this.group.add(trunkMesh);
+        this.group.add(leafMesh);
     }
 
     dispose() {
@@ -142,5 +142,4 @@ export class TreeGenerator {
         this.scene.remove(this.group);
 
     }
-
 }

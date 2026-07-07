@@ -27,6 +27,8 @@ export class FollowCamera {
         this.cameraPosition = new THREE.Vector3();
 
         this.lookTarget = new THREE.Vector3();
+        this.direction = new THREE.Vector3();
+        this.desiredPosition = new THREE.Vector3();
 
         this.followSpeed = 6;
 
@@ -38,7 +40,12 @@ export class FollowCamera {
 
         if (!this.vehicle.model) return;
 
-        const direction = new THREE.Vector3(
+        const speedRatio = Math.min(
+            Math.abs(this.vehicle.speed) / 35,
+            1
+        );
+
+        this.direction.set(
 
             Math.sin(this.vehicle.direction),
 
@@ -48,23 +55,23 @@ export class FollowCamera {
 
         );
 
-        const desiredPosition = this.vehicle.position.clone();
+        this.desiredPosition.copy(this.vehicle.position);
 
-        desiredPosition.add(
+        this.desiredPosition.add(
 
-            direction.clone().multiplyScalar(
+            this.direction.clone().multiplyScalar(
 
-                -this.offset.z
+                -this.offset.z - speedRatio * 6
 
             )
 
         );
 
-        desiredPosition.y += this.offset.y;
+        this.desiredPosition.y += this.offset.y + speedRatio * 2;
 
         this.cameraPosition.lerp(
 
-            desiredPosition,
+            this.desiredPosition,
 
             this.followSpeed * delta
 
@@ -80,6 +87,10 @@ export class FollowCamera {
 
             this.vehicle.position
 
+        );
+
+        this.lookTarget.add(
+            this.direction.multiplyScalar(speedRatio * 8)
         );
 
         this.lookTarget.y += this.targetOffset.y;
@@ -102,6 +113,19 @@ export class FollowCamera {
         );
 
         this.camera.lookAt(this.lookTarget);
+
+        const targetFov = 60 + speedRatio * 8;
+
+        if (Math.abs(this.camera.fov - targetFov) > 0.1) {
+
+            this.camera.fov = THREE.MathUtils.lerp(
+                this.camera.fov,
+                targetFov,
+                delta * 3
+            );
+            this.camera.updateProjectionMatrix();
+
+        }
 
     }
 

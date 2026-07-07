@@ -48,29 +48,34 @@ export class InputManager {
             case "KeyW":
             case "ArrowUp":
 
+                event.preventDefault();
                 this.keys.forward = true;
                 break;
 
             case "KeyS":
             case "ArrowDown":
 
+                event.preventDefault();
                 this.keys.backward = true;
                 break;
 
             case "KeyA":
             case "ArrowLeft":
 
+                event.preventDefault();
                 this.keys.left = true;
                 break;
 
             case "KeyD":
             case "ArrowRight":
 
+                event.preventDefault();
                 this.keys.right = true;
                 break;
 
             case "Space":
 
+                event.preventDefault();
                 this.keys.brake = true;
                 break;
 

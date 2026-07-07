@@ -18,9 +18,9 @@ export class Water {
 
             200,
 
-            120,
+            72,
 
-            40
+            24
 
         );
 
@@ -71,11 +71,20 @@ export class Water {
 
         );
 
+        this.updateAccumulator = 0;
+
     }
 
     update(delta) {
 
         this.time += delta;
+        this.updateAccumulator += delta;
+
+        if (this.updateAccumulator < 1 / 20) {
+            return;
+        }
+
+        this.updateAccumulator = 0;
 
         const pos =
 
