@@ -13,13 +13,7 @@ export class Suspension {
         this.pitch = 0;
         this.roll = 0;
 
-        this.wheelBase =
-            vehicle.wheelBase;
-        
-        this.trackWidth =
-            vehicle.trackWidth;
-
-        this.smoothing = 5;
+        this.smoothing = 6;
 
     }
 
@@ -30,6 +24,13 @@ export class Suspension {
         const position = this.vehicle.position;
 
         const direction = this.vehicle.direction;
+
+        // Vehicle.jsで自動計算された値を利用
+        const wheelBase =
+            this.vehicle.wheelBase;
+
+        const trackWidth =
+            this.vehicle.trackWidth;
 
         const forward = new THREE.Vector3(
 
@@ -51,81 +52,34 @@ export class Suspension {
 
         );
 
-        const frontCenter = position.clone().add(
-        
+        // 前輪中心
+        const front = position.clone().add(
+
             forward.clone().multiplyScalar(
-        
+
                 this.vehicle.frontAxleOffset
-        
+
             )
-        
-        );
-        
-        const rearCenter = position.clone().add(
-        
-            forward.clone().multiplyScalar(
-        
-                -this.vehicle.rearAxleOffset
-        
-            )
-        
-        );
-        
-        const frontLeft = frontCenter.clone().add(
-        
-            right.clone().multiplyScalar(
-        
-                -this.vehicle.trackWidth * 0.5
-        
-            )
-        
-        );
-        
-        const frontRight = frontCenter.clone().add(
-        
-            right.clone().multiplyScalar(
-        
-                this.vehicle.trackWidth * 0.5
-        
-            )
-        
-        );
-        
-        const rearLeft = rearCenter.clone().add(
-        
-            right.clone().multiplyScalar(
-        
-                -this.vehicle.trackWidth * 0.5
-        
-            )
-        
-        );
-        
-        const rearRight = rearCenter.clone().add(
-        
-            right.clone().multiplyScalar(
-        
-                this.vehicle.trackWidth * 0.5
-        
-            )
-        
+
         );
 
+        // 後輪中心
         const rear = position.clone().add(
 
             forward.clone().multiplyScalar(
 
-                -this.wheelBase * 0.5
+                -this.vehicle.rearAxleOffset
 
             )
 
         );
 
+        // 左右タイヤ
         const left = position.clone().add(
 
             right.clone().multiplyScalar(
 
-                -this.trackWidth * 0.5
+                -trackWidth * 0.5
 
             )
 
@@ -135,113 +89,53 @@ export class Suspension {
 
             right.clone().multiplyScalar(
 
-                this.trackWidth * 0.5
+                trackWidth * 0.5
 
             )
 
         );
 
         const frontHeight =
-        
-            (
-        
-                this.terrain.getHeight(
-        
-                    frontLeft.x,
-        
-                    frontLeft.z
-        
-                )
-        
-                +
-        
-                this.terrain.getHeight(
-        
-                    frontRight.x,
-        
-                    frontRight.z
-        
-                )
-        
-            ) * 0.5;
-        
+            this.terrain.getHeight(
+
+                front.x,
+
+                front.z
+
+            );
+
         const rearHeight =
-        
-            (
-        
-                this.terrain.getHeight(
-        
-                    rearLeft.x,
-        
-                    rearLeft.z
-        
-                )
-        
-                +
-        
-                this.terrain.getHeight(
-        
-                    rearRight.x,
-        
-                    rearRight.z
-        
-                )
-        
-            ) * 0.5;
+            this.terrain.getHeight(
+
+                rear.x,
+
+                rear.z
+
+            );
 
         const leftHeight =
-        
-            (
-        
-                this.terrain.getHeight(
-        
-                    frontLeft.x,
-        
-                    frontLeft.z
-        
-                )
-        
-                +
-        
-                this.terrain.getHeight(
-        
-                    rearLeft.x,
-        
-                    rearLeft.z
-        
-                )
-        
-            ) * 0.5;
-        
+            this.terrain.getHeight(
+
+                left.x,
+
+                left.z
+
+            );
+
         const rightHeight =
-        
-            (
-        
-                this.terrain.getHeight(
-        
-                    frontRight.x,
-        
-                    frontRight.z
-        
-                )
-        
-                +
-        
-                this.terrain.getHeight(
-        
-                    rearRight.x,
-        
-                    rearRight.z
-        
-                )
-        
-            ) * 0.5;
+            this.terrain.getHeight(
+
+                rightPos.x,
+
+                rightPos.z
+
+            );
 
         const targetPitch = Math.atan2(
 
             frontHeight - rearHeight,
 
-            this.wheelBase
+            wheelBase
 
         );
 
@@ -249,7 +143,7 @@ export class Suspension {
 
             leftHeight - rightHeight,
 
-            this.trackWidth
+            trackWidth
 
         );
 
