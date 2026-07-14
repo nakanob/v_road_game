@@ -1,29 +1,28 @@
-
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Three.js OffRoad Engine</title>
-
-    <link
-        rel="stylesheet"
-        href="./style.css"
-    >
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Road Trip Drive</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-
-    <div id="game"></div>
-
-    <script
-        type="module"
-        src="./main.js"
-    ></script>
-
+  <div id="game"></div>
+  <div id="loading"><div class="loading-title">ROAD TRIP</div><div class="loading-bar"><span></span></div><div class="loading-text">車両とコースを準備中...</div></div>
+  <div id="hud">
+    <div class="area-row"><span id="area-name">街</span><span id="time-name">朝</span></div>
+    <div class="progress"><span id="progress-bar"></span></div>
+    <div class="checkpoint" id="checkpoint-text">START</div>
+  </div>
+  <div id="speed"><strong id="speed-value">0</strong><span>km/h</span></div>
+  <div id="help">W / ↑ 加速　S / ↓ ブレーキ・後退　A D / ← → 操舵<br>ドラッグ：カメラ　ホイール：ズーム　C：カメラ初期化</div>
+  <div id="finish" hidden>
+    <div class="finish-card">
+      <p>ROAD TRIP COMPLETE</p>
+      <h1>キャンプ場に到着しました</h1>
+      <button id="reset-button" type="button">もう一度走る</button>
+    </div>
+  </div>
+  <script type="module" src="./main.js"></script>
 </body>
 </html>
