@@ -18,21 +18,24 @@ export class Game {
     this.scene.fog = new THREE.Fog(0xb9d8e7, 160, 520);
 
     this.camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 1600);
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 800 ? 1.25 : 1.5));
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 800 ? 1.15 : 1.35));
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.container.appendChild(this.renderer.domElement);
 
     this.ambient = new THREE.HemisphereLight(0xdceeff, 0x5d5748, 1.7);
     this.sun = new THREE.DirectionalLight(0xfff0cf, 2.5);
     this.sun.position.set(-70, 110, -50);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(1024, 1024);
+    this.sun.shadow.mapSize.set(512, 512);
     this.sun.shadow.camera.left = -90;
     this.sun.shadow.camera.right = 90;
     this.sun.shadow.camera.top = 90;
@@ -48,14 +51,24 @@ export class Game {
     this.world = new TrackWorld(this);
     this.environment = new AreaEnvironment(this);
     this.vehicle = new Vehicle(this, this.world);
-    await this.vehicle.load("./models/car.glb");
     this.cameraController = new CameraController(this, this.vehicle);
     this.dust = new Dust(this, this.vehicle, this.world);
     this.ui = new GameUI(this, this.vehicle, this.world);
+
     this.updatables.push(this.vehicle, this.cameraController, this.dust, this.ui);
     this.environment.applyArea(0, true);
-    document.getElementById("loading").style.opacity = "0";
-    setTimeout(() => document.getElementById("loading").remove(), 480);
+
+    this.hideLoading();
+
+    // GLBはゲーム開始を待たせず、バックグラウンドで最大10秒だけ試します。
+    this.vehicle.load("./models/car.glb", 10000);
+  }
+
+  hideLoading() {
+    const loading = document.getElementById("loading");
+    if (!loading) return;
+    loading.style.opacity = "0";
+    setTimeout(() => loading.remove(), 480);
   }
 
   start() {
@@ -85,6 +98,6 @@ export class Game {
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(innerWidth, innerHeight);
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 800 ? 1.25 : 1.5));
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 800 ? 1.15 : 1.35));
   }
 }
