@@ -23,7 +23,7 @@
     <div class="checkpoint" id="checkpoint-text">START</div>
   </div>
   <div id="speed"><strong id="speed-value">0</strong><span>km/h</span></div>
-  <div id="help">W / ↑ 加速　S / ↓ ブレーキ・後退　A D / ← → 操舵<br>ドラッグ：カメラ　ホイール：ズーム　C：カメラ初期化</div>
+  <div id="help">W / ↑ 加速　S / ↓ ブレーキ・後退　A D / ← → 操舵<br>ドラッグ：カメラ　ホイール：ズーム　C：カメラ初期化<br>ゴール後もカメラ操作できます</div>
   <div id="finish" hidden>
     <div class="finish-card">
       <p>ROAD TRIP COMPLETE</p>
@@ -39,6 +39,6 @@
       if (text) text.textContent = "読み込みに失敗しました。ファイル構成または通信状態を確認してください。";
     }, 15000);
   </script>
-  <script type="module" src="./main.js"></script>
+  <script type="module" src="./main.js?v=4"></script>
 </body>
 </html>
