@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Road Trip Drive</title>
   <link rel="stylesheet" href="./style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.179/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 <body>
   <div id="game"></div>
@@ -23,6 +31,14 @@
       <button id="reset-button" type="button">もう一度走る</button>
     </div>
   </div>
+  <script>
+    window.__roadTripWatchdog = setTimeout(function () {
+      var loading = document.getElementById("loading");
+      if (!loading) return;
+      var text = loading.querySelector(".loading-text");
+      if (text) text.textContent = "読み込みに失敗しました。ファイル構成または通信状態を確認してください。";
+    }, 15000);
+  </script>
   <script type="module" src="./main.js"></script>
 </body>
 </html>

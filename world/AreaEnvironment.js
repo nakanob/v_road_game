@@ -1,4 +1,4 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
+import * as THREE from "three";
 
 const PRESETS = [
   { bg:0xb8d8e6, fog:0xb8d8e6, fogNear:180, fogFar:560, hemiSky:0xd9f3ff, hemiGround:0x776b59, hemi:1.8, sun:0xffe2b4, intensity:2.2, pos:[-80,55,-80], exposure:1.05 },

@@ -1,4 +1,4 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
+import * as THREE from "three";
 
 const AREA_DATA = [
   { id: 0, key: "city", name: "街", time: "朝", start: 0.00, end: 0.24, road: 0x3f454a },

@@ -1,26 +1,29 @@
 import { Game } from "./core/Game.js";
 
-window.addEventListener("DOMContentLoaded", async () => {
+async function boot() {
   const loading = document.getElementById("loading");
-
-  const emergencyTimer = setTimeout(() => {
-    if (!loading) return;
-    loading.querySelector(".loading-text").textContent = "軽量モードで起動しています...";
-    loading.style.opacity = "0";
-    setTimeout(() => loading.remove(), 480);
-  }, 12000);
 
   try {
     const game = new Game(document.getElementById("game"));
     await game.init();
     game.start();
     window.game = game;
+
+    clearTimeout(window.__roadTripWatchdog);
   } catch (error) {
-    console.error(error);
+    console.error("ゲームの起動に失敗しました。", error);
+
     if (loading) {
-      loading.querySelector(".loading-text").textContent = "起動に失敗しました。ブラウザの再読み込みをお試しください。";
+      const text = loading.querySelector(".loading-text");
+      if (text) {
+        text.textContent = "起動に失敗しました。GitHubへ全ファイルを上書きしてください。";
+      }
     }
-  } finally {
-    clearTimeout(emergencyTimer);
   }
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot, { once: true });
+} else {
+  boot();
+}

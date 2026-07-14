@@ -1,4 +1,4 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
+import * as THREE from "three";
 import { TrackWorld } from "../world/TrackWorld.js";
 import { AreaEnvironment } from "../world/AreaEnvironment.js";
 import { Vehicle } from "../vehicle/Vehicle.js";

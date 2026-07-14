@@ -1,4 +1,4 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
+import * as THREE from "three";
 
 export class TailLampFactory {
   static create(shape="bar",width=.5,height=.16){

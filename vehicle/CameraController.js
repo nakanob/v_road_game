@@ -1,4 +1,4 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
+import * as THREE from "three";
 
 export class CameraController {
   constructor(game,vehicle){this.game=game;this.camera=game.camera;this.vehicle=vehicle;this.yaw=0;this.pitch=.25;this.distance=15;this.dragging=false;this.last={x:0,y:0};this.position=new THREE.Vector3();this.target=new THREE.Vector3();const el=game.renderer.domElement;el.addEventListener("pointerdown",e=>{this.dragging=true;this.last={x:e.clientX,y:e.clientY};el.setPointerCapture(e.pointerId)});el.addEventListener("pointermove",e=>{if(!this.dragging)return;this.yaw-=(e.clientX-this.last.x)*.006;this.pitch=THREE.MathUtils.clamp(this.pitch+(e.clientY-this.last.y)*.004,-.05,.85);this.last={x:e.clientX,y:e.clientY}});el.addEventListener("pointerup",()=>this.dragging=false);el.addEventListener("wheel",e=>{e.preventDefault();this.distance=THREE.MathUtils.clamp(this.distance+e.deltaY*.012,8,28)},{passive:false});addEventListener("keydown",e=>{if(e.code==="KeyC")this.reset()});this.reset(true)}

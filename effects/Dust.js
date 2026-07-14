@@ -1,4 +1,4 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
+import * as THREE from "three";
 
 export class Dust {
   constructor(game,vehicle,world){this.vehicle=vehicle;this.world=world;this.cursor=0;this.accum=0;this.count=70;this.geo=new THREE.BufferGeometry();this.positions=new Float32Array(this.count*3);this.life=new Float32Array(this.count);this.velocity=Array.from({length:this.count},()=>new THREE.Vector3());this.geo.setAttribute("position",new THREE.BufferAttribute(this.positions,3));this.mat=new THREE.PointsMaterial({color:0xc7aa7c,size:.7,transparent:true,opacity:.52,depthWrite:false,sizeAttenuation:true});this.points=new THREE.Points(this.geo,this.mat);game.scene.add(this.points)}
