@@ -1,7 +1,4 @@
-import * as THREE from "three";
-
 export class Dust {
-  constructor(game,vehicle,world){this.vehicle=vehicle;this.world=world;this.cursor=0;this.accum=0;this.count=70;this.geo=new THREE.BufferGeometry();this.positions=new Float32Array(this.count*3);this.life=new Float32Array(this.count);this.velocity=Array.from({length:this.count},()=>new THREE.Vector3());this.geo.setAttribute("position",new THREE.BufferAttribute(this.positions,3));this.mat=new THREE.PointsMaterial({color:0xc7aa7c,size:.7,transparent:true,opacity:.52,depthWrite:false,sizeAttenuation:true});this.points=new THREE.Points(this.geo,this.mat);game.scene.add(this.points)}
-  update(delta){const area=this.world.getArea(this.vehicle.progress);const canDust=area.id>0&&Math.abs(this.vehicle.speed)>5;this.accum+=delta*Math.abs(this.vehicle.speed);if(canDust&&this.accum>.38){this.accum=0;this.spawn();this.spawn()}for(let i=0;i<this.count;i++){if(this.life[i]<=0)continue;this.life[i]-=delta;const j=i*3;this.positions[j]+=this.velocity[i].x*delta;this.positions[j+1]+=this.velocity[i].y*delta;this.positions[j+2]+=this.velocity[i].z*delta;this.velocity[i].y+=.35*delta;if(this.life[i]<=0)this.positions[j+1]=-999}this.geo.attributes.position.needsUpdate=true}
-  spawn(){const i=this.cursor++%this.count;const p=this.vehicle.root.position;const j=i*3;const rear=new THREE.Vector3(-Math.sin(this.vehicle.root.rotation.y),0,-Math.cos(this.vehicle.root.rotation.y)).multiplyScalar(2.2);this.positions[j]=p.x+rear.x+(Math.random()-.5)*2;this.positions[j+1]=p.y+.25;this.positions[j+2]=p.z+rear.z+(Math.random()-.5)*2;this.life[i]=.75+Math.random()*.65;this.velocity[i].set((Math.random()-.5)*1.6,.35+Math.random()*.9,(Math.random()-.5)*1.6)}
+  constructor() {}
+  update() {}
 }

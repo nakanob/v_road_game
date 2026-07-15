@@ -17,17 +17,18 @@ export class Vehicle {
     this.progress = 0.006;
     this.laneOffset = 0;
     this.speed = 0;
-    this.maxSpeed = 27;
+    this.maxSpeed = 25;
     this.maxReverse = 5;
-    this.acceleration = 9.5;
+    this.acceleration = 9.0;
     this.brakePower = 17;
     this.drag = 3.8;
     this.steer = 0;
-    const startPose = this.world.getPose(this.progress, 0);
-    this.heading = Math.atan2(startPose.tangent.x, startPose.tangent.z);
     this.finished = false;
 
-    this.dimensions = new THREE.Vector3(2.36, 3.05, 5.35);
+    const startPose = this.world.getPose(this.progress, 0);
+    this.heading = Math.atan2(startPose.tangent.x, startPose.tangent.z);
+
+    this.dimensions = new THREE.Vector3(2.36, 3.02, 5.25);
     this.headLights = [];
     this.tailLights = [];
     this.tailLampShape = "double";
@@ -39,106 +40,124 @@ export class Vehicle {
 
   createCamper() {
     const camper = new THREE.Group();
-    camper.name = "vantech-style-camper";
+    camper.name = "dyna-based-camper";
 
-    const bodyWhite = new THREE.MeshStandardMaterial({ color: 0xf6f5f1, roughness: 0.58, metalness: 0.04 });
-    const bodyWhite2 = new THREE.MeshStandardMaterial({ color: 0xe8e7e3, roughness: 0.64, metalness: 0.03 });
-    const trim = new THREE.MeshStandardMaterial({ color: 0x9b9ea2, roughness: 0.48, metalness: 0.32 });
+    const white = new THREE.MeshStandardMaterial({ color: 0xf6f5f1, roughness: 0.58, metalness: 0.04 });
+    const white2 = new THREE.MeshStandardMaterial({ color: 0xe8e7e3, roughness: 0.64, metalness: 0.03 });
+    const trim = new THREE.MeshStandardMaterial({ color: 0xa7aaad, roughness: 0.46, metalness: 0.34 });
     const dark = new THREE.MeshStandardMaterial({ color: 0x171b1f, roughness: 0.84, metalness: 0.08 });
-    const glass = new THREE.MeshStandardMaterial({ color: 0x7aa2af, roughness: 0.18, metalness: 0.08, transparent: true, opacity: 0.76 });
     const blackPlastic = new THREE.MeshStandardMaterial({ color: 0x282d31, roughness: 0.72, metalness: 0.06 });
+    const glass = new THREE.MeshStandardMaterial({ color: 0x6e9ca9, roughness: 0.16, metalness: 0.08, transparent: true, opacity: 0.78 });
+    const redLamp = new THREE.MeshBasicMaterial({ color: 0xff3428, toneMapped: false });
+    const amberLamp = new THREE.MeshBasicMaterial({ color: 0xffa23a, toneMapped: false });
+    const clearLamp = new THREE.MeshBasicMaterial({ color: 0xf4f2e9, toneMapped: false });
 
-    const addBox = (size, pos, material) => {
+    const addBox = (size, pos, material, parent = camper) => {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material);
       mesh.position.set(...pos);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      camper.add(mesh);
+      parent.add(mesh);
       return mesh;
     };
 
-    // lower chassis and floor
-    addBox([2.28, 0.76, 5.00], [0, 0.80, 0], bodyWhite2);
+    // シャシー・居住部。天井は水平で、天窓や突起は付けない。
+    addBox([2.28, 0.72, 4.95], [0, 0.80, -0.02], white2);
+    addBox([2.24, 1.72, 3.72], [0, 1.92, -0.42], white);
+    addBox([2.26, 0.14, 3.78], [0, 2.85, -0.42], white2);
 
-    // main habitation box and cab
-    addBox([2.22, 1.70, 3.78], [0, 1.94, -0.35], bodyWhite);
-    addBox([2.08, 1.22, 1.46], [0, 1.64, 1.78], bodyWhite);
+    // トラックキャブ。前面窓を傾け、その傾き分だけバンク部が前へ出る。
+    addBox([2.10, 1.18, 1.38], [0, 1.57, 1.77], white);
+    const windshield = addBox([1.82, 0.67, 0.06], [0, 1.88, 2.42], glass);
+    windshield.rotation.x = -0.13;
 
-    // over-cab sleeping section
-    const overCab = addBox([2.34, 0.92, 2.62], [0, 2.64, 1.14], bodyWhite);
-    overCab.scale.x = 1.03;
-    const overNose = addBox([2.30, 0.60, 1.15], [0, 2.35, 2.28], bodyWhite2);
-    overNose.scale.x = 1.02;
-    addBox([2.36, 0.12, 2.30], [0, 3.11, 0.65], bodyWhite2);
+    // バンク部。車両フロントより前へ突き出さない。
+    addBox([2.30, 0.78, 2.34], [0, 2.48, 1.08], white);
+    addBox([2.28, 0.35, 0.76], [0, 2.31, 2.16], white2);
 
-    // windshield and windows
-    const windshield = addBox([1.80, 0.68, 0.06], [0, 1.86, 2.41], glass);
-    windshield.rotation.x = -0.1;
-    addBox([1.56, 0.56, 0.06], [0, 2.02, -2.30], glass); // rear window
-
-    // side windows and door
+    // 運転席・助手席窓（トヨタ・ダイナ系の縦長キャブ窓を意識）。
     for (const side of [-1, 1]) {
-      addBox([0.06, 0.62, 1.02], [side * 1.11, 2.10, 0.85], glass);
-      addBox([0.06, 0.72, 1.22], [side * 1.11, 1.96, -0.68], glass);
-      addBox([0.06, 0.42, 0.62], [side * 1.11, 2.64, 1.18], glass);
-      addBox([0.08, 0.12, 4.10], [side * 1.15, 1.24, -0.10], trim);
+      const cabWindow = addBox([0.06, 0.72, 0.88], [side * 1.075, 1.92, 1.62], glass);
+      cabWindow.rotation.y = 0;
+      addBox([0.07, 0.11, 1.22], [side * 1.12, 1.22, 1.62], blackPlastic);
     }
 
-    const sideDoor = addBox([0.72, 1.46, 0.06], [1.12, 1.82, -1.20], bodyWhite2);
+    // 居住部の窓。左右は必要最低限に整理。
+    addBox([0.06, 0.74, 1.34], [-1.13, 2.03, 0.12], glass);
+    addBox([0.06, 0.63, 0.98], [-1.13, 2.03, -1.27], glass);
+    addBox([0.06, 0.72, 1.38], [1.13, 2.03, 0.02], glass);
+    addBox([0.06, 0.54, 0.78], [1.13, 2.08, -1.43], glass);
+
+    // 左側中央の閉じた扉。車体からはみ出さない。
+    const sideDoor = addBox([0.055, 1.56, 0.76], [-1.145, 1.78, -0.94], white2);
+    addBox([0.06, 0.50, 0.48], [-1.18, 2.04, -0.95], glass);
+    addBox([0.07, 0.08, 0.20], [-1.185, 1.67, -0.70], dark);
     sideDoor.castShadow = true;
-    const doorWindow = addBox([0.06, 0.48, 0.20], [1.14, 2.07, -1.38], glass);
-    doorWindow.rotation.y = Math.PI / 2;
-    addBox([0.08, 0.22, 0.08], [1.16, 1.76, -1.00], dark);
 
-    // rear hatch and ladder
-    addBox([1.46, 1.10, 0.06], [0, 1.75, -2.53], bodyWhite2);
+    // 右側は扉なし。収納扉のみ低い位置に配置。
+    addBox([0.055, 0.44, 0.78], [1.145, 0.97, -1.36], white2);
+    addBox([0.055, 0.42, 0.66], [1.145, 0.96, 0.34], white2);
+
+    // 後面は窓を中心にし、大きな白いパネルは置かない。
+    addBox([1.42, 0.60, 0.06], [0, 2.07, -2.51], glass);
+    addBox([1.16, 0.06, 0.055], [0, 1.68, -2.53], redLamp);
+
+    // はしごは屋根より上に出さない。
     const ladderMat = new THREE.MeshStandardMaterial({ color: 0xb8bcc1, roughness: 0.35, metalness: 0.75 });
-    for (const x of [0.75, 0.96]) {
-      const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.9, 8), ladderMat);
-      rail.position.set(x, 2.35, -2.48); rail.castShadow = true; camper.add(rail);
+    for (const x of [0.72, 0.94]) {
+      const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 1.55, 8), ladderMat);
+      rail.position.set(x, 2.04, -2.48);
+      rail.castShadow = true;
+      camper.add(rail);
     }
-    for (let y = 1.65; y <= 3.0; y += 0.34) {
-      const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.24, 8), ladderMat);
-      rung.rotation.z = Math.PI / 2; rung.position.set(0.855, y, -2.48); rung.castShadow = true; camper.add(rung);
+    for (let y = 1.42; y <= 2.68; y += 0.31) {
+      const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.023, 0.023, 0.25, 8), ladderMat);
+      rung.rotation.z = Math.PI / 2;
+      rung.position.set(0.83, y, -2.48);
+      rung.castShadow = true;
+      camper.add(rung);
     }
 
-    // side storage doors
-    addBox([0.82, 0.48, 0.05], [-1.12, 1.00, -1.72], bodyWhite2);
-    addBox([0.64, 0.42, 0.05], [1.12, 0.95, -0.38], bodyWhite2);
-    addBox([0.82, 0.52, 0.05], [1.12, 0.92, 1.02], bodyWhite2);
+    // フロントグリル・バンパー・ワイパー・ミラー。
+    addBox([1.78, 0.18, 0.09], [0, 1.20, 2.53], blackPlastic);
+    for (let y = 1.02; y <= 1.17; y += 0.05) addBox([1.18, 0.022, 0.035], [0, y, 2.59], dark);
+    addBox([1.18, 0.23, 0.10], [0, 0.89, 2.53], trim);
+    addBox([2.22, 0.22, 0.23], [0, 0.49, 2.44], blackPlastic);
+    const emblem = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.035, 20), trim);
+    emblem.rotation.x = Math.PI / 2;
+    emblem.position.set(0, 1.29, 2.60);
+    camper.add(emblem);
+    for (const x of [-0.43, 0.43]) {
+      const wiper = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.024, 0.024), dark);
+      wiper.position.set(x, 1.60, 2.47);
+      wiper.rotation.z = x < 0 ? -0.16 : 0.16;
+      camper.add(wiper);
+    }
+    for (const side of [-1, 1]) {
+      const arm = addBox([0.06, 0.06, 0.48], [side * 1.31, 2.00, 1.96], trim);
+      arm.rotation.y = side * 0.16;
+      addBox([0.16, 0.40, 0.26], [side * 1.46, 2.00, 2.14], dark);
+    }
 
-    // graphic stripes
-    const stripeMat = new THREE.MeshStandardMaterial({ color: 0x8e9196, roughness: 0.75 });
-    const stripeMat2 = new THREE.MeshStandardMaterial({ color: 0x2c3135, roughness: 0.75 });
-    const stripe1 = addBox([0.05, 0.14, 2.6], [1.13, 1.85, -0.10], stripeMat);
-    stripe1.rotation.x = 0.0;
-    const stripe2 = addBox([0.05, 0.08, 1.9], [-1.13, 2.0, -0.50], stripeMat2);
+    // ヘッドライト・ウインカー・ナンバー。
+    for (const x of [-0.72, 0.72]) {
+      addBox([0.50, 0.22, 0.045], [x, 1.23, 2.59], clearLamp);
+      addBox([0.12, 0.12, 0.048], [x + Math.sign(x) * 0.30, 1.23, 2.60], amberLamp);
+    }
+    addBox([0.68, 0.23, 0.045], [0, 0.67, 2.58], dark);
+
+    // サイドグラフィックを控えめに。
+    const stripe1 = addBox([0.04, 0.10, 2.55], [-1.16, 1.56, -0.10], trim);
+    stripe1.rotation.x = 0;
+    const stripe2 = addBox([0.04, 0.07, 1.85], [1.16, 1.72, -0.42], blackPlastic);
     stripe2.rotation.x = 0;
 
-    // roof parts and awning
-    addBox([1.10, 0.08, 0.44], [0.22, 3.16, 0.50], trim);
-    const awning = addBox([0.10, 0.10, 2.45], [1.16, 2.88, 0.20], trim);
-    awning.rotation.x = 0.03;
-
-    // front grill / bumper and mirrors
-    addBox([1.75, 0.18, 0.10], [0, 1.18, 2.54], blackPlastic);
-    addBox([1.15, 0.24, 0.10], [0, 0.88, 2.55], trim);
-    addBox([0.52, 0.28, 0.16], [-0.66, 1.22, 2.51], bodyWhite2);
-    addBox([0.52, 0.28, 0.16], [0.66, 1.22, 2.51], bodyWhite2);
-    addBox([2.22, 0.22, 0.25], [0, 0.50, 2.48], blackPlastic);
-    for (const side of [-1, 1]) {
-      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.52), trim);
-      arm.position.set(side * 1.34, 2.0, 1.92); arm.castShadow = true; camper.add(arm);
-      const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.42, 0.28), dark);
-      mirror.position.set(side * 1.46, 2.0, 2.14); mirror.castShadow = true; camper.add(mirror);
-    }
-
-    // wheel arches / tires
+    // タイヤ・ホイール。
     const wheelGeometry = new THREE.CylinderGeometry(0.47, 0.47, 0.34, 22);
     const hubGeometry = new THREE.CylinderGeometry(0.19, 0.19, 0.355, 16);
     const wheelPositions = [
-      [-1.10, 0.56, 1.48], [1.10, 0.56, 1.48],
-      [-1.10, 0.56, -1.56], [1.10, 0.56, -1.56]
+      [-1.10, 0.56, 1.45], [1.10, 0.56, 1.45],
+      [-1.10, 0.56, -1.53], [1.10, 0.56, -1.53]
     ];
     this.wheels = [];
     for (const [x, y, z] of wheelPositions) {
@@ -155,45 +174,12 @@ export class Vehicle {
       this.wheels.push(wheelGroup);
     }
 
-    // headlights visual meshes
-    const lampMat = new THREE.MeshBasicMaterial({ color: 0xf8f1db, toneMapped: false });
+    // 後部ランプ。
     for (const x of [-0.78, 0.78]) {
-      const head = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.22, 0.04), lampMat);
-      head.position.set(x, 1.24, 2.58);
-      camper.add(head);
-      const indicator = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.045), new THREE.MeshBasicMaterial({ color: 0xffa23a, toneMapped: false }));
-      indicator.position.set(x + Math.sign(x) * 0.29, 1.24, 2.59);
-      camper.add(indicator);
+      addBox([0.46, 0.11, 0.04], [x, 0.81, -2.57], redLamp);
+      addBox([0.46, 0.075, 0.04], [x, 0.66, -2.57], clearLamp);
     }
-
-    // front grille slats, emblem, wipers and license plate
-    for (let y = 0.98; y <= 1.16; y += 0.07) {
-      addBox([1.18, 0.025, 0.035], [0, y, 2.61], dark);
-    }
-    const emblem = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.035, 20), trim);
-    emblem.rotation.x = Math.PI / 2;
-    emblem.position.set(0, 1.28, 2.62);
-    camper.add(emblem);
-    for (const x of [-0.42, 0.42]) {
-      const wiper = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.025, 0.025), dark);
-      wiper.position.set(x, 1.58, 2.47);
-      wiper.rotation.z = x < 0 ? -0.16 : 0.16;
-      camper.add(wiper);
-    }
-    addBox([0.70, 0.24, 0.045], [0, 0.68, 2.62], dark);
-
-    // side vents, handles and rear details matching the reference silhouette
-    for (const side of [-1, 1]) {
-      for (let i = 0; i < 8; i++) {
-        addBox([0.035, 0.035, 0.42], [side * 1.16, 1.20 + i * 0.045, -1.70], dark);
-      }
-      addBox([0.04, 0.08, 0.22], [side * 1.17, 1.65, -0.95], dark);
-    }
-    for (const x of [-0.78, 0.78]) {
-      addBox([0.44, 0.12, 0.04], [x, 0.82, -2.58], new THREE.MeshBasicMaterial({ color: 0xff3428, toneMapped: false }));
-      addBox([0.44, 0.08, 0.04], [x, 0.67, -2.58], new THREE.MeshBasicMaterial({ color: 0xe9e9e9, toneMapped: false }));
-    }
-    addBox([0.62, 0.22, 0.04], [0, 0.62, -2.59], dark);
+    addBox([0.62, 0.22, 0.04], [0, 0.61, -2.58], dark);
 
     this.model = camper;
     this.bodyPivot.add(camper);
@@ -205,19 +191,21 @@ export class Vehicle {
     this.updateSpeed(delta);
     this.updateSteering(delta);
 
-    // 車両の絶対方位で移動し、道路の接線・横方向へ投影する。
-    // 道路側が曲がっても車両方位は変わらないため、自分で操舵する必要がある。
     const poseBeforeMove = this.world.getPose(this.progress, this.laneOffset);
     const moveDirection = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading));
     const forwardAmount = moveDirection.dot(poseBeforeMove.tangent) * this.speed * delta;
     const sideAmount = moveDirection.dot(poseBeforeMove.side) * this.speed * delta;
-    this.progress = THREE.MathUtils.clamp(this.progress + forwardAmount / this.world.length, 0, 1);
-    this.laneOffset += sideAmount;
 
+    this.progress = THREE.MathUtils.clamp(this.progress + forwardAmount / this.world.length, 0, 1);
+    const nextLaneOffset = this.laneOffset + sideAmount;
     const limit = this.world.roadHalfWidth - this.dimensions.x * 0.53;
-    if (this.laneOffset < -limit || this.laneOffset > limit) {
-      this.laneOffset = THREE.MathUtils.clamp(this.laneOffset, -limit, limit);
-      this.speed *= 0.985;
+
+    if (nextLaneOffset < -limit || nextLaneOffset > limit) {
+      this.laneOffset = THREE.MathUtils.clamp(nextLaneOffset, -limit, limit);
+      // 道路外へ向かった場合は横滑りさせず、速度をなめらかに落とす。
+      this.speed = THREE.MathUtils.damp(this.speed, 0, 8.5, delta);
+    } else {
+      this.laneOffset = nextLaneOffset;
     }
 
     this.placeAtProgress(delta);
@@ -250,16 +238,14 @@ export class Vehicle {
 
   updateSteering(delta) {
     let target = 0;
-    if (this.input.keys.left) target = -1;
-    if (this.input.keys.right) target = 1;
+    // 画面上の左・右と一致する向きに統一。
+    if (this.input.keys.left) target = 1;
+    if (this.input.keys.right) target = -1;
 
     this.steer = THREE.MathUtils.damp(this.steer, target, 10, delta);
-
-    // 実車と同様に、後退時は同じハンドル操作でも車体の回転方向が反転する。
-    // これにより、バック時の左右キー表示と挙動が自然になる。
     const speedRatio = THREE.MathUtils.clamp(Math.abs(this.speed) / 8, 0, 1);
-    const yawRate = this.steer * this.speed * (0.032 + speedRatio * 0.020);
-    this.heading += yawRate * delta;
+    const yawRate = this.steer * Math.abs(this.speed) * (0.032 + speedRatio * 0.020);
+    this.heading -= yawRate * delta;
   }
 
   placeAtProgress(delta = 0.016, immediate = false) {
@@ -268,7 +254,7 @@ export class Vehicle {
     this.root.position.y += 0.11;
     this.root.rotation.y = this.heading;
 
-    const leanTarget = -this.steer * 0.022 * Math.min(Math.abs(this.speed) / 12, 1);
+    const leanTarget = -this.steer * 0.018 * Math.min(Math.abs(this.speed) / 12, 1);
     this.bodyPivot.rotation.z = immediate ? leanTarget : THREE.MathUtils.damp(this.bodyPivot.rotation.z, leanTarget, 4.5, delta);
     this.bodyPivot.rotation.x = immediate ? 0 : THREE.MathUtils.damp(this.bodyPivot.rotation.x, 0, 5, delta);
 
@@ -282,10 +268,10 @@ export class Vehicle {
     const height = 1.18;
 
     for (const x of [-width, width]) {
-      const light = new THREE.SpotLight(0xfff0c8, 0, 92, THREE.MathUtils.degToRad(26), 0.56, 1.35);
+      const light = new THREE.SpotLight(0xffefc7, 0, 100, THREE.MathUtils.degToRad(29), 0.52, 1.25);
       light.position.set(x, height, front);
       const target = new THREE.Object3D();
-      target.position.set(x, -0.55, front + 42);
+      target.position.set(x * 0.55, -1.15, front + 34);
       this.bodyPivot.add(light, target);
       light.target = target;
       this.headLights.push(light);
@@ -301,9 +287,9 @@ export class Vehicle {
       this.bodyPivot.add(glow);
       this.tailLights.push({ lamp, glow });
     }
-    // center high mount stop lamp
+
     const centerLamp = TailLampFactory.create("bar", 0.36, 0.10);
-    centerLamp.position.set(0, 2.0, rear - 0.04);
+    centerLamp.position.set(0, 1.66, rear - 0.04);
     centerLamp.rotation.y = Math.PI;
     this.bodyPivot.add(centerLamp);
     const centerGlow = new THREE.PointLight(0xff2b22, 0, 5, 2);
@@ -326,7 +312,7 @@ export class Vehicle {
     const area = this.world.getArea(this.progress);
     const dark = area.id >= 2;
     const braking = this.input.keys.brake || this.input.keys.backward;
-    for (const light of this.headLights) light.intensity = dark ? (area.id === 3 ? 58 : 44) : 0;
+    for (const light of this.headLights) light.intensity = dark ? (area.id === 3 ? 68 : 50) : 0;
     for (const item of this.tailLights) {
       item.lamp.visible = dark || braking;
       item.glow.intensity = braking ? 3.0 : dark ? 0.9 : 0;
