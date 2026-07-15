@@ -23,6 +23,8 @@ export class Vehicle {
     this.brakePower = 17;
     this.drag = 3.8;
     this.steer = 0;
+    const startPose = this.world.getPose(this.progress, 0);
+    this.heading = Math.atan2(startPose.tangent.x, startPose.tangent.z);
     this.finished = false;
 
     this.dimensions = new THREE.Vector3(2.36, 3.05, 5.35);
@@ -156,10 +158,42 @@ export class Vehicle {
     // headlights visual meshes
     const lampMat = new THREE.MeshBasicMaterial({ color: 0xf8f1db, toneMapped: false });
     for (const x of [-0.78, 0.78]) {
-      const head = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.16, 0.04), lampMat);
-      head.position.set(x, 1.25, 2.58);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.22, 0.04), lampMat);
+      head.position.set(x, 1.24, 2.58);
       camper.add(head);
+      const indicator = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.045), new THREE.MeshBasicMaterial({ color: 0xffa23a, toneMapped: false }));
+      indicator.position.set(x + Math.sign(x) * 0.29, 1.24, 2.59);
+      camper.add(indicator);
     }
+
+    // front grille slats, emblem, wipers and license plate
+    for (let y = 0.98; y <= 1.16; y += 0.07) {
+      addBox([1.18, 0.025, 0.035], [0, y, 2.61], dark);
+    }
+    const emblem = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.035, 20), trim);
+    emblem.rotation.x = Math.PI / 2;
+    emblem.position.set(0, 1.28, 2.62);
+    camper.add(emblem);
+    for (const x of [-0.42, 0.42]) {
+      const wiper = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.025, 0.025), dark);
+      wiper.position.set(x, 1.58, 2.47);
+      wiper.rotation.z = x < 0 ? -0.16 : 0.16;
+      camper.add(wiper);
+    }
+    addBox([0.70, 0.24, 0.045], [0, 0.68, 2.62], dark);
+
+    // side vents, handles and rear details matching the reference silhouette
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < 8; i++) {
+        addBox([0.035, 0.035, 0.42], [side * 1.16, 1.20 + i * 0.045, -1.70], dark);
+      }
+      addBox([0.04, 0.08, 0.22], [side * 1.17, 1.65, -0.95], dark);
+    }
+    for (const x of [-0.78, 0.78]) {
+      addBox([0.44, 0.12, 0.04], [x, 0.82, -2.58], new THREE.MeshBasicMaterial({ color: 0xff3428, toneMapped: false }));
+      addBox([0.44, 0.08, 0.04], [x, 0.67, -2.58], new THREE.MeshBasicMaterial({ color: 0xe9e9e9, toneMapped: false }));
+    }
+    addBox([0.62, 0.22, 0.04], [0, 0.62, -2.59], dark);
 
     this.model = camper;
     this.bodyPivot.add(camper);
@@ -170,7 +204,22 @@ export class Vehicle {
 
     this.updateSpeed(delta);
     this.updateSteering(delta);
-    this.progress = THREE.MathUtils.clamp(this.progress + (this.speed * delta) / this.world.length, 0, 1);
+
+    // 車両の絶対方位で移動し、道路の接線・横方向へ投影する。
+    // 道路側が曲がっても車両方位は変わらないため、自分で操舵する必要がある。
+    const poseBeforeMove = this.world.getPose(this.progress, this.laneOffset);
+    const moveDirection = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading));
+    const forwardAmount = moveDirection.dot(poseBeforeMove.tangent) * this.speed * delta;
+    const sideAmount = moveDirection.dot(poseBeforeMove.side) * this.speed * delta;
+    this.progress = THREE.MathUtils.clamp(this.progress + forwardAmount / this.world.length, 0, 1);
+    this.laneOffset += sideAmount;
+
+    const limit = this.world.roadHalfWidth - this.dimensions.x * 0.53;
+    if (this.laneOffset < -limit || this.laneOffset > limit) {
+      this.laneOffset = THREE.MathUtils.clamp(this.laneOffset, -limit, limit);
+      this.speed *= 0.985;
+    }
+
     this.placeAtProgress(delta);
 
     const spin = (this.speed * delta) / 0.47;
@@ -201,23 +250,23 @@ export class Vehicle {
 
   updateSteering(delta) {
     let target = 0;
-    if (this.input.keys.left) target = 1;
-    if (this.input.keys.right) target = -1;
+    if (this.input.keys.left) target = -1;
+    if (this.input.keys.right) target = 1;
 
-    this.steer = THREE.MathUtils.damp(this.steer, target, 8, delta);
-    const speedFactor = 0.30 + Math.min(Math.abs(this.speed) / this.maxSpeed, 1) * 0.70;
-    this.laneOffset += this.steer * delta * 7.2 * speedFactor * (this.speed < 0 ? -1 : 1);
+    this.steer = THREE.MathUtils.damp(this.steer, target, 10, delta);
 
-    const limit = this.world.roadHalfWidth - this.dimensions.x * 0.53;
-    this.laneOffset = THREE.MathUtils.clamp(this.laneOffset, -limit, limit);
-    if (!target) this.laneOffset = THREE.MathUtils.damp(this.laneOffset, 0, 0.28, delta);
+    // 実車と同様に、後退時は同じハンドル操作でも車体の回転方向が反転する。
+    // これにより、バック時の左右キー表示と挙動が自然になる。
+    const speedRatio = THREE.MathUtils.clamp(Math.abs(this.speed) / 8, 0, 1);
+    const yawRate = this.steer * this.speed * (0.032 + speedRatio * 0.020);
+    this.heading += yawRate * delta;
   }
 
   placeAtProgress(delta = 0.016, immediate = false) {
     const pose = this.world.getPose(this.progress, this.laneOffset);
     this.root.position.copy(pose.position);
     this.root.position.y += 0.11;
-    this.root.rotation.y = Math.atan2(pose.tangent.x, pose.tangent.z);
+    this.root.rotation.y = this.heading;
 
     const leanTarget = -this.steer * 0.022 * Math.min(Math.abs(this.speed) / 12, 1);
     this.bodyPivot.rotation.z = immediate ? leanTarget : THREE.MathUtils.damp(this.bodyPivot.rotation.z, leanTarget, 4.5, delta);
@@ -233,10 +282,10 @@ export class Vehicle {
     const height = 1.18;
 
     for (const x of [-width, width]) {
-      const light = new THREE.SpotLight(0xfff2ce, 0, 58, THREE.MathUtils.degToRad(22), 0.72, 1.8);
+      const light = new THREE.SpotLight(0xfff0c8, 0, 92, THREE.MathUtils.degToRad(26), 0.56, 1.35);
       light.position.set(x, height, front);
       const target = new THREE.Object3D();
-      target.position.set(x, 0.15, front + 32);
+      target.position.set(x, -0.55, front + 42);
       this.bodyPivot.add(light, target);
       light.target = target;
       this.headLights.push(light);
@@ -277,7 +326,7 @@ export class Vehicle {
     const area = this.world.getArea(this.progress);
     const dark = area.id >= 2;
     const braking = this.input.keys.brake || this.input.keys.backward;
-    for (const light of this.headLights) light.intensity = dark ? 30 : 0;
+    for (const light of this.headLights) light.intensity = dark ? (area.id === 3 ? 58 : 44) : 0;
     for (const item of this.tailLights) {
       item.lamp.visible = dark || braking;
       item.glow.intensity = braking ? 3.0 : dark ? 0.9 : 0;
@@ -290,6 +339,8 @@ export class Vehicle {
     this.laneOffset = 0;
     this.speed = 0;
     this.steer = 0;
+    const startPose = this.world.getPose(this.progress, 0);
+    this.heading = Math.atan2(startPose.tangent.x, startPose.tangent.z);
     this.finished = false;
     this.placeAtProgress(1, true);
   }

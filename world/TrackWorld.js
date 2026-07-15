@@ -39,10 +39,12 @@ export class TrackWorld {
     this.createTerrainBands();
     this.createRoad();
     this.createRoadEdges();
+    this.createCrosswalks();
     this.createCheckpoints();
     this.createCity();
     this.createField();
     this.createRiverAndBridge();
+    this.createTunnel();
     this.createMountain();
     this.createCampground();
     this.createStars();
@@ -299,6 +301,22 @@ export class TrackWorld {
     this.scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(r), mat));
   }
 
+  createCrosswalks() {
+    for (const t of [0.055, 0.145]) {
+      const sample = this.getSample(t);
+      const group = new THREE.Group();
+      const stripeMat = new THREE.MeshBasicMaterial({ color: 0xf2f2ed, toneMapped: false });
+      for (let z = -3.4; z <= 3.4; z += 1.15) {
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(this.roadHalfWidth * 2 - 0.8, 0.025, 0.58), stripeMat);
+        stripe.position.set(0, 0.12, z);
+        group.add(stripe);
+      }
+      group.position.copy(sample.point);
+      group.rotation.y = Math.atan2(sample.tangent.x, sample.tangent.z);
+      this.scene.add(group);
+    }
+  }
+
   createCheckpoints() {
     [0.24, 0.50, 0.76, 0.995].forEach((t, index) => {
       const s = this.getSample(t);
@@ -324,16 +342,26 @@ export class TrackWorld {
 
   createCity() {
     const placements = [
-      { type: "house", t: 0.028, side: -1, dist: 15 },
-      { type: "house", t: 0.044, side: 1, dist: 15 },
-      { type: "supermarket", t: 0.070, side: -1, dist: 18 },
-      { type: "convenience", t: 0.088, side: 1, dist: 15 },
-      { type: "gas", t: 0.110, side: -1, dist: 19 },
-      { type: "police", t: 0.132, side: 1, dist: 18 },
-      { type: "mall", t: 0.158, side: -1, dist: 22 },
-      { type: "house", t: 0.180, side: 1, dist: 16 },
-      { type: "building", t: 0.198, side: -1, dist: 17 },
-      { type: "building", t: 0.214, side: 1, dist: 17 }
+      { type: "house", t: 0.018, side: -1, dist: 14 },
+      { type: "house", t: 0.028, side: 1, dist: 15 },
+      { type: "building", t: 0.038, side: -1, dist: 18 },
+      { type: "house", t: 0.048, side: 1, dist: 15 },
+      { type: "supermarket", t: 0.060, side: -1, dist: 19 },
+      { type: "convenience", t: 0.072, side: 1, dist: 15 },
+      { type: "house", t: 0.084, side: -1, dist: 15 },
+      { type: "building", t: 0.094, side: 1, dist: 18 },
+      { type: "gas", t: 0.106, side: -1, dist: 20 },
+      { type: "house", t: 0.116, side: 1, dist: 15 },
+      { type: "police", t: 0.128, side: 1, dist: 19 },
+      { type: "convenience", t: 0.138, side: -1, dist: 16 },
+      { type: "mall", t: 0.151, side: -1, dist: 24 },
+      { type: "building", t: 0.162, side: 1, dist: 18 },
+      { type: "house", t: 0.174, side: -1, dist: 15 },
+      { type: "house", t: 0.184, side: 1, dist: 16 },
+      { type: "supermarket", t: 0.196, side: -1, dist: 20 },
+      { type: "building", t: 0.207, side: 1, dist: 18 },
+      { type: "house", t: 0.218, side: -1, dist: 15 },
+      { type: "building", t: 0.229, side: 1, dist: 18 }
     ];
 
     for (const item of placements) {
@@ -350,8 +378,8 @@ export class TrackWorld {
       this.placeRoadside(mesh, item.t, item.side, item.dist);
     }
 
-    for (let i = 0; i < 16; i++) {
-      this.addStreetLight(0.012 + i * 0.013, i % 2 ? 1 : -1);
+    for (let i = 0; i < 22; i++) {
+      this.addStreetLight(0.008 + i * 0.0102, i % 2 ? 1 : -1);
     }
   }
 
@@ -495,64 +523,148 @@ export class TrackWorld {
 
   createRiverAndBridge() {
     const s = this.getSample(.40);
-    const water = new THREE.Mesh(
-      new THREE.PlaneGeometry(132, 18),
-      new THREE.MeshStandardMaterial({ color: 0x3d89ac, roughness: .22, metalness: .12, transparent: true, opacity: .9 })
-    );
-    water.rotation.x = -Math.PI / 2;
-    water.rotation.z = -Math.atan2(s.tangent.x, s.tangent.z);
-    water.position.copy(s.point);
-    water.position.y -= .55;
-    this.scene.add(water);
+    const yaw = Math.atan2(s.tangent.x, s.tangent.z);
+    const group = new THREE.Group();
+
+    const channelMat = new THREE.MeshStandardMaterial({ color: 0x3d332d, roughness: 1 });
+    const channel = new THREE.Mesh(new THREE.BoxGeometry(150, 3.5, 24), channelMat);
+    channel.position.y = -2.1;
+    channel.receiveShadow = true;
+    group.add(channel);
+
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x2c7fa8,
+      roughness: .16,
+      metalness: .18,
+      transparent: true,
+      opacity: .9
+    });
+    const water = new THREE.Mesh(new THREE.BoxGeometry(150, .18, 18), waterMat);
+    water.position.y = -0.65;
+    group.add(water);
+
+    const bankMat = new THREE.MeshStandardMaterial({ map: this.textures.dirt, color: 0x70543a, roughness: 1 });
+    for (const z of [-15, 15]) {
+      const bank = new THREE.Mesh(new THREE.BoxGeometry(150, 2.0, 11), bankMat);
+      bank.position.set(0, -0.25, z);
+      bank.rotation.x = z < 0 ? -0.22 : 0.22;
+      bank.receiveShadow = true;
+      group.add(bank);
+    }
 
     const bridge = new THREE.Group();
-    const yaw = Math.atan2(s.tangent.x, s.tangent.z);
     const deck = new THREE.Mesh(
-      new THREE.BoxGeometry(this.roadHalfWidth * 2 + 2.4, .55, 42),
-      new THREE.MeshStandardMaterial({ map: this.textures.asphalt, color: 0x676864, roughness: .88 })
+      new THREE.BoxGeometry(this.roadHalfWidth * 2 + 2.6, .72, 34),
+      new THREE.MeshStandardMaterial({ map: this.textures.asphalt, color: 0x656663, roughness: .88 })
     );
-    deck.position.y = 0.18;
+    deck.position.y = .35;
     deck.receiveShadow = true;
     bridge.add(deck);
 
-    const railMat = new THREE.MeshStandardMaterial({ color: 0xcfc9bf, roughness: .8 });
-    for (const x of [-this.roadHalfWidth - 1.1, this.roadHalfWidth + 1.1]) {
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(.18, .75, 42), railMat);
-      rail.position.set(x, 0.63, 0); bridge.add(rail);
-      for (let z = -18; z <= 18; z += 6) {
-        const post = new THREE.Mesh(new THREE.BoxGeometry(.22, 1.0, .22), railMat);
-        post.position.set(x, 0.5, z); bridge.add(post);
+    const beamMat = new THREE.MeshStandardMaterial({ color: 0x4d5459, roughness: .65, metalness: .28 });
+    for (const x of [-this.roadHalfWidth - .95, this.roadHalfWidth + .95]) {
+      const sideBeam = new THREE.Mesh(new THREE.BoxGeometry(.42, 1.05, 34), beamMat);
+      sideBeam.position.set(x, .05, 0);
+      sideBeam.castShadow = true;
+      bridge.add(sideBeam);
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(.16, .18, 34), beamMat);
+      rail.position.set(x, 1.12, 0);
+      bridge.add(rail);
+      for (let z = -15; z <= 15; z += 3) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(.15, 1.5, .15), beamMat);
+        post.position.set(x, .65, z);
+        bridge.add(post);
       }
     }
-    for (const z of [-14, 0, 14]) {
-      const support = new THREE.Mesh(new THREE.BoxGeometry(2.8, 4.4, 2.8), new THREE.MeshStandardMaterial({ color: 0x7f756d, roughness: .95 }));
-      support.position.set(0, -2.1, z); bridge.add(support);
+
+    const pierMat = new THREE.MeshStandardMaterial({ color: 0x888079, roughness: .95 });
+    for (const z of [-10, 10]) {
+      for (const x of [-3.4, 3.4]) {
+        const pier = new THREE.Mesh(new THREE.BoxGeometry(1.6, 4.6, 2.2), pierMat);
+        pier.position.set(x, -1.8, z);
+        pier.castShadow = true;
+        bridge.add(pier);
+      }
     }
 
-    bridge.position.copy(s.point);
-    bridge.rotation.y = yaw;
-    this.scene.add(bridge);
+    group.add(bridge);
+    group.position.copy(s.point);
+    group.rotation.y = yaw;
+    this.scene.add(group);
+  }
+
+  createTunnel() {
+    const s = this.getSample(.515);
+    const group = new THREE.Group();
+    const rockMat = new THREE.MeshStandardMaterial({ map: this.textures.rock, color: 0x69625d, roughness: 1 });
+    const concrete = new THREE.MeshStandardMaterial({ color: 0x898783, roughness: .92, side: THREE.DoubleSide });
+    // Mountain mass is built around the opening instead of intersecting the road.
+    const leftMass = new THREE.Mesh(new THREE.BoxGeometry(20, 25, 44), rockMat);
+    leftMass.position.set(-16.8, 6.5, 0);
+    leftMass.castShadow = leftMass.receiveShadow = true;
+    group.add(leftMass);
+    const rightMass = leftMass.clone();
+    rightMass.position.x = 16.8;
+    group.add(rightMass);
+    const topMass = new THREE.Mesh(new THREE.BoxGeometry(15.0, 16, 44), rockMat);
+    topMass.position.set(0, 15.4, 0);
+    topMass.castShadow = topMass.receiveShadow = true;
+    group.add(topMass);
+
+    for (const z of [-18.1, 18.1]) {
+      const top = new THREE.Mesh(new THREE.BoxGeometry(15.6, 1.0, 1.0), concrete);
+      top.position.set(0, 7.8, z); group.add(top);
+      for (const x of [-7.3, 7.3]) {
+        const side = new THREE.Mesh(new THREE.BoxGeometry(1.0, 8.0, 1.0), concrete);
+        side.position.set(x, 3.8, z); group.add(side);
+      }
+      const sign = new THREE.Mesh(new THREE.BoxGeometry(6.4, .55, .22), new THREE.MeshStandardMaterial({ color: 0xe7dfcf, roughness: .8 }));
+      sign.position.set(0, 8.7, z + (z < 0 ? -.62 : .62)); group.add(sign);
+    }
+
+    const ceiling = new THREE.Mesh(new THREE.BoxGeometry(13.8, .55, 36), concrete);
+    ceiling.position.set(0, 7.55, 0); group.add(ceiling);
+    for (const x of [-6.65, 6.65]) {
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(.55, 7.2, 36), concrete);
+      wall.position.set(x, 3.6, 0); group.add(wall);
+    }
+
+    // Small warm lamps make the tunnel readable while keeping it lightweight.
+    for (const z of [-12, -4, 4, 12]) {
+      const lamp = new THREE.Mesh(new THREE.BoxGeometry(.9, .10, .22), new THREE.MeshBasicMaterial({ color: 0xffd79a, toneMapped: false }));
+      lamp.position.set(0, 7.2, z); group.add(lamp);
+    }
+
+    group.position.copy(s.point);
+    group.position.y -= 0.15;
+    group.rotation.y = Math.atan2(s.tangent.x, s.tangent.z);
+    this.scene.add(group);
   }
 
   createMountain() {
-    this.createInstancedRocks(.51, .77, 180);
-    this.createDetailedTrees(.54, .75, 56, 12, 48, true);
-    this.createMountainBackdrop(0.60, -1, 48, 20);
-    this.createMountainBackdrop(0.67, 1, 56, 28);
-    this.createMountainBackdrop(0.72, -1, 60, 26);
+    this.createInstancedRocks(.54, .77, 88);
+    this.createDetailedTrees(.55, .75, 56, 13, 48, true);
+    this.createMountainBackdrop(0.60, -1, 42, 20);
+    this.createMountainBackdrop(0.67, 1, 48, 25);
+    this.createMountainBackdrop(0.72, -1, 52, 24);
   }
 
   createMountainBackdrop(t, side, width, height) {
     const s = this.getSample(t);
     const group = new THREE.Group();
-    const rockMat = new THREE.MeshStandardMaterial({ map: this.textures.rock, color: 0x7c736b, roughness: 1 });
+    const rockMat = new THREE.MeshStandardMaterial({ map: this.textures.rock, color: 0x756e68, roughness: 1 });
     for (let i = 0; i < 4; i++) {
-      const cone = new THREE.Mesh(new THREE.ConeGeometry(width * (0.46 + i * 0.09), height * (0.8 + i * 0.12), 8), rockMat);
-      cone.position.set((i - 1.5) * width * 0.35, height * 0.5, -i * 8);
-      cone.castShadow = true; cone.receiveShadow = true; group.add(cone);
+      const mass = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 1), rockMat);
+      const sx = width * (0.32 + i * 0.05);
+      const sy = height * (0.48 + i * 0.06);
+      mass.scale.set(sx, sy, sx * 0.9);
+      mass.position.set((i - 1.5) * width * 0.28, sy * 0.62 - 5.5, -i * 8);
+      mass.castShadow = true;
+      mass.receiveShadow = true;
+      group.add(mass);
     }
-    group.position.copy(s.point).addScaledVector(s.side, side * (44 + width * 0.42));
-    group.position.y -= 4;
+    group.position.copy(s.point).addScaledVector(s.side, side * (46 + width * 0.42));
+    group.position.y -= 7;
     group.rotation.y = Math.atan2(s.tangent.x, s.tangent.z) + (side > 0 ? -0.8 : 0.8);
     this.scene.add(group);
   }
@@ -566,12 +678,13 @@ export class TrackWorld {
       const t = start + Math.random() * (end - start);
       const s = this.getSample(t);
       const side = Math.random() < .5 ? -1 : 1;
-      const dist = 10 + Math.random() * 58;
+      const dist = 15 + Math.random() * 54;
       d.position.copy(s.point).addScaledVector(s.side, side * dist);
-      d.position.y += Math.max(0, dist - 10) * 0.09 + Math.random() * 2.2;
+      d.position.y += Math.max(0, dist - 13) * 0.065 + Math.random() * 1.5;
       d.rotation.set(Math.random(), Math.random() * Math.PI, Math.random());
-      const sc = 1 + Math.random() * 4.5;
-      d.scale.set(sc, sc * (.65 + Math.random()), sc);
+      const sizeBand = Math.random();
+      const sc = sizeBand < .45 ? .45 + Math.random() * .75 : sizeBand < .85 ? 1.2 + Math.random() * 1.5 : 2.7 + Math.random() * 1.8;
+      d.scale.set(sc, sc * (.65 + Math.random() * .45), sc * (.75 + Math.random() * .4));
       d.updateMatrix();
       inst.setMatrixAt(i, d.matrix);
     }

@@ -40,11 +40,11 @@ export class CameraController {
   }
 
   update(delta) {
-    const pose = this.vehicle.world.getPose(this.vehicle.progress, 0);
-    const roadYaw = Math.atan2(pose.tangent.x, pose.tangent.z);
-    this.smoothedRoadYaw = this.dampAngle(this.smoothedRoadYaw, roadYaw, 3.2, delta);
+    const pose = this.vehicle.world.getPose(this.vehicle.progress, this.vehicle.laneOffset);
+    const vehicleYaw = this.vehicle.root.rotation.y;
+    this.smoothedRoadYaw = this.dampAngle(this.smoothedRoadYaw, vehicleYaw, 2.8, delta);
 
-    const anchorTarget = pose.position.clone();
+    const anchorTarget = this.vehicle.root.position.clone();
     anchorTarget.y += 1.45;
     const followK = 1 - Math.exp(-delta * 4.0);
     this.smoothedAnchor.lerp(anchorTarget, followK);
@@ -61,7 +61,12 @@ export class CameraController {
     this.position.lerp(desired, cameraK);
     this.camera.position.copy(this.position);
 
-    const lookAhead = pose.tangent.clone().multiplyScalar(this.vehicle.finished ? 0 : 4.0);
+    const lookDirection = new THREE.Vector3(
+      Math.sin(this.smoothedRoadYaw),
+      0,
+      Math.cos(this.smoothedRoadYaw)
+    );
+    const lookAhead = lookDirection.multiplyScalar(this.vehicle.finished ? 0 : 4.0);
     const desiredTarget = this.smoothedAnchor.clone().add(lookAhead);
     desiredTarget.y += 0.50;
     this.smoothedTarget.lerp(desiredTarget, 1 - Math.exp(-delta * 5.0));
@@ -80,10 +85,9 @@ export class CameraController {
     this.yawOffset = 0;
     this.pitch = 0.28;
     this.distance = 16;
-    const pose = this.vehicle.world.getPose(this.vehicle.progress, 0);
-    const yaw = Math.atan2(pose.tangent.x, pose.tangent.z);
+    const yaw = this.vehicle.root.rotation.y;
     this.smoothedRoadYaw = yaw;
-    this.smoothedAnchor.copy(pose.position).add(new THREE.Vector3(0, 1.45, 0));
+    this.smoothedAnchor.copy(this.vehicle.root.position).add(new THREE.Vector3(0, 1.45, 0));
     this.smoothedTarget.copy(this.smoothedAnchor);
     if (immediate) {
       this.position.copy(this.smoothedAnchor).add(new THREE.Vector3(-Math.sin(yaw) * 16, 7.4, -Math.cos(yaw) * 16));
