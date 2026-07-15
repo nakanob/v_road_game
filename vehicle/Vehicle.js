@@ -68,12 +68,14 @@ export class Vehicle {
 
     // トラックキャブ。前面窓を傾け、その傾き分だけバンク部が前へ出る。
     addBox([2.10, 1.18, 1.38], [0, 1.57, 1.77], white);
-    const windshield = addBox([1.82, 0.67, 0.06], [0, 1.88, 2.42], glass);
-    windshield.rotation.x = -0.13;
+    const windshield = addBox([1.86, 0.74, 0.06], [0, 1.93, 2.38], glass);
+    windshield.rotation.x = -0.22;
+    addBox([0.10, 0.96, 0.10], [-0.93, 1.88, 2.18], white2);
+    addBox([0.10, 0.96, 0.10], [0.93, 1.88, 2.18], white2);
 
     // バンク部。車両フロントより前へ突き出さない。
-    addBox([2.30, 0.78, 2.34], [0, 2.48, 1.08], white);
-    addBox([2.28, 0.35, 0.76], [0, 2.31, 2.16], white2);
+    addBox([2.30, 0.74, 2.18], [0, 2.50, 1.02], white);
+    addBox([2.18, 0.24, 0.58], [0, 2.25, 2.06], white2);
 
     // 運転席・助手席窓（トヨタ・ダイナ系の縦長キャブ窓を意識）。
     for (const side of [-1, 1]) {
@@ -201,9 +203,9 @@ export class Vehicle {
     const limit = this.world.roadHalfWidth - this.dimensions.x * 0.53;
 
     if (nextLaneOffset < -limit || nextLaneOffset > limit) {
-      this.laneOffset = THREE.MathUtils.clamp(nextLaneOffset, -limit, limit);
-      // 道路外へ向かった場合は横滑りさせず、速度をなめらかに落とす。
-      this.speed = THREE.MathUtils.damp(this.speed, 0, 8.5, delta);
+      const clamped = THREE.MathUtils.clamp(nextLaneOffset, -limit, limit);
+      this.laneOffset = THREE.MathUtils.damp(this.laneOffset, clamped, 12, delta);
+      this.speed *= Math.max(0.86, 1 - delta * 1.8);
     } else {
       this.laneOffset = nextLaneOffset;
     }
@@ -238,14 +240,13 @@ export class Vehicle {
 
   updateSteering(delta) {
     let target = 0;
-    // 画面上の左・右と一致する向きに統一。
-    if (this.input.keys.left) target = 1;
-    if (this.input.keys.right) target = -1;
+    if (this.input.keys.left) target = -1;
+    if (this.input.keys.right) target = 1;
 
     this.steer = THREE.MathUtils.damp(this.steer, target, 10, delta);
     const speedRatio = THREE.MathUtils.clamp(Math.abs(this.speed) / 8, 0, 1);
-    const yawRate = this.steer * Math.abs(this.speed) * (0.032 + speedRatio * 0.020);
-    this.heading -= yawRate * delta;
+    const yawRate = this.steer * this.speed * (0.030 + speedRatio * 0.022);
+    this.heading += yawRate * delta;
   }
 
   placeAtProgress(delta = 0.016, immediate = false) {
@@ -268,10 +269,10 @@ export class Vehicle {
     const height = 1.18;
 
     for (const x of [-width, width]) {
-      const light = new THREE.SpotLight(0xffefc7, 0, 100, THREE.MathUtils.degToRad(29), 0.52, 1.25);
+      const light = new THREE.SpotLight(0xffefc7, 0, 135, THREE.MathUtils.degToRad(34), 0.46, 1.05);
       light.position.set(x, height, front);
       const target = new THREE.Object3D();
-      target.position.set(x * 0.55, -1.15, front + 34);
+      target.position.set(x * 0.38, -2.15, front + 40);
       this.bodyPivot.add(light, target);
       light.target = target;
       this.headLights.push(light);
@@ -312,7 +313,7 @@ export class Vehicle {
     const area = this.world.getArea(this.progress);
     const dark = area.id >= 2;
     const braking = this.input.keys.brake || this.input.keys.backward;
-    for (const light of this.headLights) light.intensity = dark ? (area.id === 3 ? 68 : 50) : 0;
+    for (const light of this.headLights) light.intensity = dark ? (area.id === 3 ? 82 : 58) : 0;
     for (const item of this.tailLights) {
       item.lamp.visible = dark || braking;
       item.glow.intensity = braking ? 3.0 : dark ? 0.9 : 0;

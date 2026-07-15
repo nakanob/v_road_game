@@ -4,7 +4,7 @@ export class InputManager {
     addEventListener("keydown", (e) => this.set(e, true));
     addEventListener("keyup", (e) => this.set(e, false));
     addEventListener("blur", () => this.reset());
-    this.bindVirtualPad();
+    this.bindVirtualJoystick();
   }
 
   set(e, value) {
@@ -21,30 +21,68 @@ export class InputManager {
     this.keys[key] = value;
   }
 
-  bindVirtualPad() {
-    document.querySelectorAll("[data-control]").forEach((button) => {
-      const key = button.dataset.control;
-      const press = (e) => {
-        e.preventDefault();
-        this.keys[key] = true;
-        button.classList.add("is-active");
-        button.setPointerCapture?.(e.pointerId);
-      };
-      const release = (e) => {
-        e.preventDefault();
-        this.keys[key] = false;
-        button.classList.remove("is-active");
-      };
-      button.addEventListener("pointerdown", press);
-      button.addEventListener("pointerup", release);
-      button.addEventListener("pointercancel", release);
-      button.addEventListener("lostpointercapture", release);
-      button.addEventListener("contextmenu", (e) => e.preventDefault());
+  bindVirtualJoystick() {
+    const stick = document.getElementById("virtual-joystick");
+    const knob = document.getElementById("virtual-knob");
+    if (!stick || !knob) return;
+
+    const radius = 42;
+    let pointerId = null;
+
+    const apply = (dx, dy) => {
+      const len = Math.hypot(dx, dy) || 1;
+      const clamped = Math.min(len, radius);
+      const nx = (dx / len) * clamped;
+      const ny = (dy / len) * clamped;
+      knob.style.transform = `translate(${nx}px, ${ny}px)`;
+
+      const sx = nx / radius;
+      const sy = ny / radius;
+      const dead = 0.18;
+      this.keys.left = sx < -dead;
+      this.keys.right = sx > dead;
+      this.keys.forward = sy < -dead;
+      this.keys.backward = sy > dead;
+      this.keys.brake = false;
+      stick.classList.toggle("is-active", clamped > 2);
+    };
+
+    const release = () => {
+      pointerId = null;
+      knob.style.transform = "translate(0px, 0px)";
+      stick.classList.remove("is-active");
+      this.keys.forward = false;
+      this.keys.backward = false;
+      this.keys.left = false;
+      this.keys.right = false;
+    };
+
+    const move = (e) => {
+      if (pointerId !== e.pointerId) return;
+      const rect = stick.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      apply(e.clientX - cx, e.clientY - cy);
+    };
+
+    stick.addEventListener("pointerdown", (e) => {
+      pointerId = e.pointerId;
+      stick.setPointerCapture?.(e.pointerId);
+      move(e);
+      e.preventDefault();
     });
+    stick.addEventListener("pointermove", move);
+    stick.addEventListener("pointerup", release);
+    stick.addEventListener("pointercancel", release);
+    stick.addEventListener("lostpointercapture", release);
+    stick.addEventListener("contextmenu", (e) => e.preventDefault());
   }
 
   reset() {
     for (const k in this.keys) this.keys[k] = false;
-    document.querySelectorAll("[data-control]").forEach((button) => button.classList.remove("is-active"));
+    const stick = document.getElementById("virtual-joystick");
+    const knob = document.getElementById("virtual-knob");
+    if (stick) stick.classList.remove("is-active");
+    if (knob) knob.style.transform = "translate(0px, 0px)";
   }
 }
