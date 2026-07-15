@@ -201,8 +201,8 @@ export class Vehicle {
 
   updateSteering(delta) {
     let target = 0;
-    if (this.input.keys.left) target = -1;
-    if (this.input.keys.right) target = 1;
+    if (this.input.keys.left) target = 1;
+    if (this.input.keys.right) target = -1;
 
     this.steer = THREE.MathUtils.damp(this.steer, target, 8, delta);
     const speedFactor = 0.30 + Math.min(Math.abs(this.speed) / this.maxSpeed, 1) * 0.70;

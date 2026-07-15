@@ -183,10 +183,19 @@ export class TrackWorld {
       return shoulder + Math.sin(sample.point.z * 0.04 + offset * 0.09) * 0.38 + Math.cos(sample.point.x * 0.06) * 0.18 - 0.08;
     });
 
-    this.createTerrainRibbon(0.50, 0.76, 72, 28, mountainMat, (offset, k, sample) => {
+    this.createTerrainRibbon(0.50, 0.76, 76, 48, mountainMat, (offset, k, sample) => {
       const abs = Math.abs(offset);
-      const rise = Math.pow(Math.max(0, abs - 9), 1.12) * 0.11;
-      return rise + Math.sin(sample.point.z * 0.05 + offset * 0.08) * 0.6 + Math.cos(sample.point.x * 0.08) * 0.35 - 0.1;
+
+      // 道路と路肩の範囲は完全に平らにし、山の地形が道路へ被らないようにする
+      if (abs <= 13) return -0.12;
+
+      // 13m〜20mの間で緩やかに山地へ接続する
+      const blend = THREE.MathUtils.smoothstep(abs, 13, 20);
+      const rise = Math.pow(Math.max(0, abs - 13), 1.10) * 0.10;
+      const variation = Math.sin(sample.point.z * 0.045 + offset * 0.07) * 0.42
+        + Math.cos(sample.point.x * 0.07) * 0.24;
+
+      return THREE.MathUtils.lerp(-0.12, rise + variation, blend);
     });
 
     this.createTerrainRibbon(0.76, 1.00, 52, 24, campMat, (offset, k, sample) => {
@@ -538,12 +547,12 @@ export class TrackWorld {
     const group = new THREE.Group();
     const rockMat = new THREE.MeshStandardMaterial({ map: this.textures.rock, color: 0x7c736b, roughness: 1 });
     for (let i = 0; i < 4; i++) {
-      const cone = new THREE.Mesh(new THREE.ConeGeometry(width * (0.65 + i * 0.12), height * (0.8 + i * 0.12), 8), rockMat);
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(width * (0.46 + i * 0.09), height * (0.8 + i * 0.12), 8), rockMat);
       cone.position.set((i - 1.5) * width * 0.35, height * 0.5, -i * 8);
       cone.castShadow = true; cone.receiveShadow = true; group.add(cone);
     }
-    group.position.copy(s.point).addScaledVector(s.side, side * (28 + width * 0.3));
-    group.position.y -= 3;
+    group.position.copy(s.point).addScaledVector(s.side, side * (44 + width * 0.42));
+    group.position.y -= 4;
     group.rotation.y = Math.atan2(s.tangent.x, s.tangent.z) + (side > 0 ? -0.8 : 0.8);
     this.scene.add(group);
   }
