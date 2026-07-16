@@ -250,8 +250,8 @@ export class Vehicle {
   updateSteering(delta) {
     let target = 0;
     // v8で逆転していた左右入力だけを修正。
-    if (this.input.keys.left) target = -1;
-    if (this.input.keys.right) target = 1;
+    if (this.input.keys.left) target = 1;
+    if (this.input.keys.right) target = -1;
 
     this.steer = THREE.MathUtils.damp(this.steer, target, 10, delta);
     const speedRatio = THREE.MathUtils.clamp(Math.abs(this.speed) / 8, 0, 1);

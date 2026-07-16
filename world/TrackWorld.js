@@ -519,71 +519,94 @@ export class TrackWorld {
     const roadYaw = Math.atan2(sample.tangent.x, sample.tangent.z);
     const riverYaw = Math.atan2(sample.side.x, sample.side.z);
 
-    // 川は道路より低い位置に置き、道路を横切る方向へ長く伸ばす。
     const river = new THREE.Group();
-    const riverBedMat = new THREE.MeshStandardMaterial({ map: this.textures.dirt, color: 0x66503d, roughness: 1 });
-    const bankMat = new THREE.MeshStandardMaterial({ map: this.textures.grass, color: 0x627d42, roughness: 1 });
+    const bedMat = new THREE.MeshStandardMaterial({ color: 0x6b5844, roughness: 1 });
+    const bankMat = new THREE.MeshStandardMaterial({ color: 0x6e8a49, roughness: 1 });
     const waterMat = new THREE.MeshStandardMaterial({
-      color: 0x2e91c4,
-      roughness: .16,
-      metalness: .08,
+      color: 0x5aa3c6,
+      roughness: 0.08,
+      metalness: 0.08,
       transparent: true,
-      opacity: .94,
+      opacity: 0.96,
       side: THREE.DoubleSide
     });
 
-    const trench = new THREE.Mesh(new THREE.BoxGeometry(30, 4.2, 150), riverBedMat);
-    trench.position.y = -3.0;
-    trench.receiveShadow = true;
-    river.add(trench);
+    const channel = new THREE.Mesh(new THREE.BoxGeometry(44, 6.5, 190), bedMat);
+    channel.position.y = -3.6;
+    channel.receiveShadow = true;
+    river.add(channel);
 
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(16, 146), waterMat);
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(20, 184), waterMat);
     water.rotation.x = -Math.PI / 2;
-    water.position.y = -1.05;
+    water.position.y = -1.65;
     river.add(water);
 
-    for (const x of [-12.5, 12.5]) {
-      const bank = new THREE.Mesh(new THREE.BoxGeometry(9, 3.0, 150), bankMat);
-      bank.position.set(x, -1.05, 0);
-      bank.receiveShadow = true;
-      river.add(bank);
+    for (const x of [-15, 15]) {
+      const upperBank = new THREE.Mesh(new THREE.BoxGeometry(10, 2.1, 190), bankMat);
+      upperBank.position.set(x, -0.65, 0);
+      upperBank.receiveShadow = true;
+      river.add(upperBank);
+
+      const slope = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.8, 190), bankMat);
+      slope.position.set(x * 0.73, -1.65, 0);
+      slope.rotation.z = x < 0 ? 0.42 : -0.42;
+      slope.receiveShadow = true;
+      river.add(slope);
+    }
+
+    for (let z = -82; z <= 82; z += 16) {
+      const stoneLeft = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.8, 6.5), bedMat);
+      stoneLeft.position.set(-10.8, -1.3, z);
+      river.add(stoneLeft);
+      const stoneRight = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.8, 6.5), bedMat);
+      stoneRight.position.set(10.8, -1.3, z);
+      river.add(stoneRight);
     }
 
     river.position.copy(sample.point);
+    river.position.y -= 0.2;
     river.rotation.y = riverYaw;
     this.scene.add(river);
 
-    // 橋はv8の道路面と同じ高さに合わせ、川の上だけを渡る長さにする。
     const bridge = new THREE.Group();
-    const concrete = new THREE.MeshStandardMaterial({ color: 0x92989e, roughness: .92 });
-    const asphalt = new THREE.MeshStandardMaterial({ map: this.textures.asphalt, color: 0x606360, roughness: .9 });
-    const steel = new THREE.MeshStandardMaterial({ color: 0x626a70, roughness: .58, metalness: .28 });
+    const concrete = new THREE.MeshStandardMaterial({ color: 0x8d8a84, roughness: 0.95 });
+    const wood = new THREE.MeshStandardMaterial({ color: 0x86664a, roughness: 0.88 });
+    const steel = new THREE.MeshStandardMaterial({ color: 0x70767d, roughness: 0.58, metalness: 0.22 });
+    const asphalt = new THREE.MeshStandardMaterial({ map: this.textures.asphalt, color: 0x5f615d, roughness: 0.95 });
 
-    const deckBase = new THREE.Mesh(new THREE.BoxGeometry(this.roadHalfWidth * 2 + 1.8, .52, 22), concrete);
-    deckBase.position.y = -.18;
+    const bridgeLength = 28;
+    const deckBase = new THREE.Mesh(new THREE.BoxGeometry(this.roadHalfWidth * 2 + 2.2, 0.62, bridgeLength), concrete);
+    deckBase.position.y = -0.18;
     deckBase.receiveShadow = true;
     bridge.add(deckBase);
 
-    const deckTop = new THREE.Mesh(new THREE.BoxGeometry(this.roadHalfWidth * 2 + .35, .16, 20), asphalt);
-    deckTop.position.y = .10;
-    deckTop.receiveShadow = true;
-    bridge.add(deckTop);
+    const roadSurface = new THREE.Mesh(new THREE.BoxGeometry(this.roadHalfWidth * 2 + 0.45, 0.16, bridgeLength - 1.0), asphalt);
+    roadSurface.position.y = 0.16;
+    roadSurface.receiveShadow = true;
+    bridge.add(roadSurface);
 
-    for (const x of [-this.roadHalfWidth - .62, this.roadHalfWidth + .62]) {
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(.13, .15, 22), steel);
-      rail.position.set(x, .80, 0);
-      bridge.add(rail);
-
-      for (let z = -10; z <= 10; z += 2.5) {
-        const post = new THREE.Mesh(new THREE.BoxGeometry(.13, 1.35, .13), steel);
-        post.position.set(x, .20, z);
+    for (const x of [-this.roadHalfWidth - 0.82, this.roadHalfWidth + 0.82]) {
+      const guardBase = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, bridgeLength - 0.2), wood);
+      guardBase.position.set(x, 0.72, 0);
+      bridge.add(guardBase);
+      const guardTop = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, bridgeLength - 0.2), wood);
+      guardTop.position.set(x, 1.48, 0);
+      bridge.add(guardTop);
+      for (let z = -bridgeLength / 2 + 1.0; z <= bridgeLength / 2 - 1.0; z += 2.2) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.0, 0.16), wood);
+        post.position.set(x, 0.98, z);
         bridge.add(post);
+      }
+      for (const y of [0.98, 1.26]) {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, bridgeLength - 0.6), steel);
+        rail.position.set(x, y, 0);
+        bridge.add(rail);
       }
     }
 
-    for (const z of [-6, 0, 6]) {
-      const pier = new THREE.Mesh(new THREE.BoxGeometry(2.1, 2.6, 1.4), concrete);
-      pier.position.set(0, -1.65, z);
+    for (const z of [-7.5, 0, 7.5]) {
+      const pier = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.0, 1.6), concrete);
+      pier.position.set(0, -1.8, z);
       bridge.add(pier);
     }
 
@@ -594,72 +617,112 @@ export class TrackWorld {
 
   createTunnel() {
     const sample = this.getSample(.515);
+    const yaw = Math.atan2(sample.tangent.x, sample.tangent.z);
     const group = new THREE.Group();
-    const rockMat = new THREE.MeshStandardMaterial({ map: this.textures.rock, color: 0x706861, roughness: 1 });
-    const concrete = new THREE.MeshStandardMaterial({ color: 0x8d8c87, roughness: .94 });
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x555957, roughness: 1, side: THREE.DoubleSide });
 
-    // 道路中央に幅11.8m・高さ7.2mの空洞を確保した通過可能なトンネル。
-    const length = 30;
-    const halfWidth = 5.9;
-    const height = 7.2;
+    const rockMat = new THREE.MeshStandardMaterial({ map: this.textures.rock, color: 0x746d66, roughness: 1 });
+    const concrete = new THREE.MeshStandardMaterial({ color: 0x8a837a, roughness: 0.95 });
+    const innerMat = new THREE.MeshStandardMaterial({ color: 0x413e39, roughness: 1, side: THREE.BackSide });
+    const roadMat = new THREE.MeshStandardMaterial({ map: this.textures.rock, color: 0x5a524b, roughness: 1 });
 
-    const leftMountain = new THREE.Mesh(new THREE.BoxGeometry(18, 17, 34), rockMat);
-    leftMountain.position.set(-14.2, 6.2, 0);
-    leftMountain.rotation.z = .40;
-    leftMountain.castShadow = leftMountain.receiveShadow = true;
-    group.add(leftMountain);
+    const mountainBack = new THREE.Mesh(new THREE.ConeGeometry(28, 26, 4), rockMat);
+    mountainBack.rotation.y = Math.PI / 4;
+    mountainBack.position.set(0, 8.5, -1.5);
+    mountainBack.castShadow = true;
+    mountainBack.receiveShadow = true;
+    group.add(mountainBack);
 
-    const rightMountain = new THREE.Mesh(new THREE.BoxGeometry(18, 17, 34), rockMat);
-    rightMountain.position.set(14.2, 6.2, 0);
-    rightMountain.rotation.z = -.40;
-    rightMountain.castShadow = rightMountain.receiveShadow = true;
-    group.add(rightMountain);
+    const leftMass = new THREE.Mesh(new THREE.DodecahedronGeometry(10, 0), rockMat);
+    leftMass.position.set(-12.5, 6.5, 1.0);
+    leftMass.scale.set(1.15, 1.05, 1.35);
+    leftMass.castShadow = true;
+    leftMass.receiveShadow = true;
+    group.add(leftMass);
 
-    const mountainPeak = new THREE.Mesh(new THREE.ConeGeometry(19, 16, 4), rockMat);
-    mountainPeak.position.set(0, 13.0, 0);
-    mountainPeak.rotation.y = Math.PI / 4;
-    mountainPeak.castShadow = mountainPeak.receiveShadow = true;
-    group.add(mountainPeak);
+    const rightMass = new THREE.Mesh(new THREE.DodecahedronGeometry(10, 0), rockMat);
+    rightMass.position.set(12.5, 6.5, 1.0);
+    rightMass.scale.set(1.15, 1.05, 1.35);
+    rightMass.castShadow = true;
+    rightMass.receiveShadow = true;
+    group.add(rightMass);
 
-    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(.75, height, length), wallMat);
-    leftWall.position.set(-halfWidth, height / 2, 0);
+    const capMass = new THREE.Mesh(new THREE.DodecahedronGeometry(11.5, 0), rockMat);
+    capMass.position.set(0, 13.0, -3.0);
+    capMass.scale.set(1.65, 0.95, 1.2);
+    capMass.castShadow = true;
+    capMass.receiveShadow = true;
+    group.add(capMass);
+
+    const tunnelLength = 34;
+    const archRadius = 5.2;
+    const wallHeight = 3.4;
+    const innerWidth = 10.4;
+
+    const shell = new THREE.Mesh(
+      new THREE.CylinderGeometry(archRadius, archRadius, tunnelLength, 28, 1, true, 0, Math.PI),
+      innerMat
+    );
+    shell.rotation.x = Math.PI / 2;
+    shell.position.y = wallHeight;
+    group.add(shell);
+
+    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.26, wallHeight, tunnelLength), innerMat);
+    leftWall.position.set(-innerWidth / 2, wallHeight / 2, 0);
     group.add(leftWall);
 
-    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(.75, height, length), wallMat);
-    rightWall.position.set(halfWidth, height / 2, 0);
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.26, wallHeight, tunnelLength), innerMat);
+    rightWall.position.set(innerWidth / 2, wallHeight / 2, 0);
     group.add(rightWall);
 
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(halfWidth * 2, .7, length), wallMat);
-    roof.position.set(0, height - .15, 0);
-    group.add(roof);
+    const road = new THREE.Mesh(new THREE.BoxGeometry(innerWidth + 0.2, 0.08, tunnelLength), roadMat);
+    road.position.y = 0.04;
+    road.receiveShadow = true;
+    group.add(road);
 
-    const floor = new THREE.Mesh(new THREE.BoxGeometry(halfWidth * 2 + .7, .08, length), new THREE.MeshStandardMaterial({ map: this.textures.rock, color: 0x5a5149, roughness: 1 }));
-    floor.position.y = .04;
-    group.add(floor);
+    const frontPortal = this.createTunnelPortal(innerWidth, wallHeight, archRadius, 0.7, concrete);
+    frontPortal.position.z = tunnelLength / 2 - 0.35;
+    group.add(frontPortal);
 
-    for (const z of [-length / 2 + .45, length / 2 - .45]) {
-      const top = new THREE.Mesh(new THREE.BoxGeometry(halfWidth * 2 + 1.8, .85, .9), concrete);
-      top.position.set(0, height + .25, z);
-      group.add(top);
+    const backPortal = this.createTunnelPortal(innerWidth, wallHeight, archRadius, 0.7, concrete);
+    backPortal.rotation.y = Math.PI;
+    backPortal.position.z = -tunnelLength / 2 + 0.35;
+    group.add(backPortal);
 
-      for (const x of [-halfWidth - .45, halfWidth + .45]) {
-        const side = new THREE.Mesh(new THREE.BoxGeometry(.9, height + 1.0, .9), concrete);
-        side.position.set(x, height / 2, z);
-        group.add(side);
-      }
-    }
-
-    for (let z = -11; z <= 11; z += 5.5) {
-      const light = new THREE.PointLight(0xffd09b, .55, 12, 2);
-      light.position.set(0, 5.7, z);
+    for (let z = -10; z <= 10; z += 5) {
+      const light = new THREE.PointLight(0xffd2a0, 0.65, 13, 2);
+      light.position.set(0, 6.1, z);
       group.add(light);
     }
 
     group.position.copy(sample.point);
-    group.position.y -= .05;
-    group.rotation.y = Math.atan2(sample.tangent.x, sample.tangent.z);
+    group.position.y -= 0.08;
+    group.rotation.y = yaw;
     this.scene.add(group);
+  }
+
+  createTunnelPortal(innerWidth, wallHeight, archRadius, depth, material) {
+    const outerWidth = innerWidth + 3.4;
+    const outerHeight = wallHeight + archRadius + 2.2;
+    const innerShape = this.createArchShape(innerWidth, wallHeight, archRadius);
+    const outerShape = this.createArchShape(outerWidth, wallHeight + 1.0, archRadius + 1.1);
+    outerShape.holes.push(new THREE.Path(innerShape.getPoints(48)));
+    const geometry = new THREE.ExtrudeGeometry(outerShape, { depth, bevelEnabled: false, curveSegments: 32 });
+    geometry.translate(0, 0, -depth / 2);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.y = (outerHeight - depth * 0) * 0.0;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  }
+
+  createArchShape(width, wallHeight, radius) {
+    const shape = new THREE.Shape();
+    shape.moveTo(-width / 2, 0);
+    shape.lineTo(-width / 2, wallHeight);
+    shape.absarc(0, wallHeight, radius, Math.PI, 0, false);
+    shape.lineTo(width / 2, 0);
+    shape.closePath();
+    return shape;
   }
 
   createMountain() {
@@ -776,103 +839,149 @@ export class TrackWorld {
 
   createHumanSpriteTexture(index) {
     const canvas = document.createElement("canvas");
-    canvas.width = 192;
-    canvas.height = 384;
+    canvas.width = 256;
+    canvas.height = 512;
     const ctx = canvas.getContext("2d");
-    const skins = ["#f3c9aa", "#dfaa83", "#c98e68", "#8e5d42"];
-    const hairs = ["#221712", "#3b291f", "#6e4c31", "#171313"];
-    const tops = ["#587eb3", "#a6534b", "#568153", "#c08d3f", "#756495", "#3e7580"];
-    const bottoms = ["#323a4d", "#4a4036", "#263746", "#494949"];
+    const skins = ["#f1c6aa", "#dfa985", "#c88f68", "#8c5b41"];
+    const hairs = ["#1f1815", "#3f2c22", "#6b4c33", "#111111"];
+    const jackets = ["#1d2a36", "#324c68", "#5a3d39", "#4d6b45", "#7f5c2d"];
+    const shirts = ["#d8e2ea", "#f0e5d7", "#cdd9c9", "#ddd0e5"];
+    const pants = ["#273646", "#45403b", "#212121", "#44515f"];
+    const shoes = ["#f0f0f0", "#202020", "#6a4d37"];
     const skin = skins[index % skins.length];
-    const hair = hairs[(index * 3) % hairs.length];
-    const top = tops[index % tops.length];
-    const bottom = bottoms[index % bottoms.length];
+    const hair = hairs[(index * 2) % hairs.length];
+    const jacket = jackets[index % jackets.length];
+    const shirt = shirts[(index + 1) % shirts.length];
+    const pant = pants[(index + 2) % pants.length];
+    const shoe = shoes[(index + 1) % shoes.length];
+    const pose = index % 5;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const bodyGradient = ctx.createLinearGradient(55, 115, 140, 230);
-    bodyGradient.addColorStop(0, top);
-    bodyGradient.addColorStop(1, "#27313d");
-    ctx.fillStyle = bodyGradient;
+    const shadow = ctx.createRadialGradient(128, 472, 4, 128, 472, 46);
+    shadow.addColorStop(0, "rgba(0,0,0,0.28)");
+    shadow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = shadow;
     ctx.beginPath();
-    ctx.moveTo(66, 118);
-    ctx.quadraticCurveTo(96, 102, 126, 118);
-    ctx.lineTo(138, 226);
-    ctx.quadraticCurveTo(96, 244, 54, 226);
+    ctx.ellipse(128, 472, 46, 16, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const jacketGrad = ctx.createLinearGradient(70, 145, 186, 300);
+    jacketGrad.addColorStop(0, jacket);
+    jacketGrad.addColorStop(1, "#1a1f26");
+
+    // neck
+    ctx.fillStyle = skin;
+    ctx.fillRect(116, 110, 24, 30);
+
+    // torso
+    ctx.fillStyle = jacketGrad;
+    ctx.beginPath();
+    ctx.moveTo(78, 142);
+    ctx.quadraticCurveTo(128, 126, 178, 142);
+    ctx.lineTo(190, 290);
+    ctx.quadraticCurveTo(128, 314, 66, 290);
     ctx.closePath();
     ctx.fill();
 
-    // neck and head
+    // shirt opening / zipper
+    ctx.fillStyle = shirt;
+    ctx.fillRect(123, 148, 10, 132);
+    ctx.fillStyle = "rgba(255,255,255,0.82)";
+    ctx.fillRect(128, 144, 2, 152);
+
+    // head
     ctx.fillStyle = skin;
-    ctx.fillRect(84, 90, 24, 30);
     ctx.beginPath();
-    ctx.ellipse(96, 67, 35, 43, 0, 0, Math.PI * 2);
+    ctx.ellipse(128, 84, 42, 52, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.beginPath(); ctx.ellipse(84, 90, 8, 13, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(172, 90, 8, 13, 0, 0, Math.PI * 2); ctx.fill();
 
-    // ears
-    ctx.beginPath(); ctx.ellipse(59, 70, 7, 12, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(133, 70, 7, 12, 0, 0, Math.PI * 2); ctx.fill();
-
-    // hair with variations
+    // hair
     ctx.fillStyle = hair;
     ctx.beginPath();
-    ctx.ellipse(96, 48, 37, 30, 0, Math.PI, Math.PI * 2);
-    ctx.lineTo(60, 67);
-    ctx.quadraticCurveTo(62, 28, 96, 24);
-    ctx.quadraticCurveTo(132, 28, 133, 67);
+    ctx.moveTo(86, 84);
+    ctx.quadraticCurveTo(84, 38, 128, 30);
+    ctx.quadraticCurveTo(170, 36, 171, 84);
+    ctx.lineTo(166, 66);
+    ctx.quadraticCurveTo(136, 50, 108, 58);
+    ctx.quadraticCurveTo(94, 62, 88, 77);
     ctx.closePath();
     ctx.fill();
-    if (index % 3 === 0) {
-      ctx.fillRect(61, 45, 9, 38);
-      ctx.fillRect(122, 45, 9, 38);
+    if (pose === 1 || pose === 3) {
+      ctx.fillRect(86, 58, 10, 40);
+      ctx.fillRect(160, 58, 10, 36);
     }
 
-    // eyes, eyebrows, nose, mouth
-    ctx.strokeStyle = "#3a2a24";
+    // face
+    ctx.strokeStyle = "#3c2b22";
     ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(72, 60); ctx.lineTo(85, 57); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(107, 57); ctx.lineTo(120, 60); ctx.stroke();
-    ctx.fillStyle = "#201a18";
-    ctx.beginPath(); ctx.ellipse(80, 68, 3.2, 4.2, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(112, 68, 3.2, 4.2, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = "#a66a53";
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(96, 68); ctx.lineTo(92, 82); ctx.lineTo(99, 83); ctx.stroke();
-    ctx.strokeStyle = "#9d4d48";
-    ctx.beginPath(); ctx.arc(96, 89, 10, .15, Math.PI - .15); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(104, 78); ctx.lineTo(118, 75); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(138, 75); ctx.lineTo(152, 78); ctx.stroke();
+    ctx.fillStyle = "#1d1714";
+    ctx.beginPath(); ctx.ellipse(112, 90, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(144, 90, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#ae765f";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(128, 92); ctx.lineTo(123, 108); ctx.lineTo(131, 109); ctx.stroke();
+    ctx.strokeStyle = "#9e4e4d";
+    ctx.beginPath(); ctx.arc(128, 118, 11, 0.1, Math.PI - 0.1); ctx.stroke();
 
-    // arms with natural elbows
-    ctx.strokeStyle = top;
-    ctx.lineWidth = 22;
-    ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(63, 135); ctx.lineTo(39, 186); ctx.lineTo(50, 232); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(129, 135); ctx.lineTo(153, 184); ctx.lineTo(142, 229); ctx.stroke();
-    ctx.strokeStyle = skin;
-    ctx.lineWidth = 14;
-    ctx.beginPath(); ctx.moveTo(50, 232); ctx.lineTo(55, 249); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(142, 229); ctx.lineTo(137, 248); ctx.stroke();
+    // arms
+    const armStroke = (points, width, color) => {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(points[0][0], points[0][1]);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+      ctx.stroke();
+    };
 
-    // trousers and legs with realistic proportions
-    ctx.fillStyle = bottom;
+    const leftArmSets = [
+      [[84, 160], [56, 220], [72, 278]],
+      [[84, 160], [64, 214], [82, 262]],
+      [[84, 160], [58, 214], [60, 272]],
+      [[84, 160], [70, 214], [92, 248]],
+      [[84, 160], [58, 202], [46, 250]]
+    ];
+    const rightArmSets = [
+      [[172, 160], [198, 220], [186, 278]],
+      [[172, 160], [192, 210], [208, 254]],
+      [[172, 160], [198, 208], [204, 268]],
+      [[172, 160], [186, 208], [210, 224]],
+      [[172, 160], [194, 194], [218, 208]]
+    ];
+    armStroke(leftArmSets[pose], 22, jacket);
+    armStroke(rightArmSets[pose], 22, jacket);
+    armStroke([[...leftArmSets[pose][2]], [leftArmSets[pose][2][0] + 4, leftArmSets[pose][2][1] + 20]], 14, skin);
+    armStroke([[...rightArmSets[pose][2]], [rightArmSets[pose][2][0] - 4, rightArmSets[pose][2][1] + 20]], 14, skin);
+
+    // legs
+    ctx.fillStyle = pant;
     ctx.beginPath();
-    ctx.moveTo(61, 222); ctx.lineTo(91, 222); ctx.lineTo(86, 337); ctx.lineTo(58, 337); ctx.closePath(); ctx.fill();
+    ctx.moveTo(79, 286); ctx.lineTo(121, 286); ctx.lineTo(114, 446); ctx.lineTo(76, 446); ctx.closePath(); ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(101, 222); ctx.lineTo(131, 222); ctx.lineTo(134, 337); ctx.lineTo(106, 337); ctx.closePath(); ctx.fill();
+    ctx.moveTo(135, 286); ctx.lineTo(177, 286); ctx.lineTo(184, 446); ctx.lineTo(144, 446); ctx.closePath(); ctx.fill();
 
     // shoes
-    ctx.fillStyle = "#191919";
-    ctx.beginPath(); ctx.roundRect(48, 330, 42, 22, 8); ctx.fill();
-    ctx.beginPath(); ctx.roundRect(103, 330, 42, 22, 8); ctx.fill();
+    ctx.fillStyle = shoe;
+    ctx.beginPath(); ctx.roundRect(66, 440, 58, 24, 10); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(138, 440, 58, 24, 10); ctx.fill();
 
-    // beverage / plate variation
-    if (index % 4 === 0) {
-      ctx.fillStyle = "#e5e4df";
-      ctx.fillRect(131, 207, 16, 30);
-      ctx.fillStyle = "#d79a42";
-      ctx.fillRect(134, 215, 10, 16);
-    } else if (index % 4 === 1) {
-      ctx.fillStyle = "#f4f0e5";
-      ctx.beginPath(); ctx.ellipse(45, 226, 18, 7, 0, 0, Math.PI * 2); ctx.fill();
+    // small item variations
+    if (pose === 0 || pose === 3) {
+      ctx.fillStyle = "#ebdfcd";
+      ctx.beginPath(); ctx.ellipse(204, 258, 14, 10, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#9c632b";
+      ctx.fillRect(194, 246, 18, 10);
+    } else if (pose === 2) {
+      ctx.fillStyle = "#efe8dc";
+      ctx.fillRect(40, 266, 18, 28);
+      ctx.fillStyle = "#d59d3e";
+      ctx.fillRect(44, 272, 10, 14);
     }
 
     const texture = new THREE.CanvasTexture(canvas);
