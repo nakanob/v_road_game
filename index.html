@@ -17,27 +17,33 @@
 <body>
   <div id="game"></div>
   <div id="loading"><div class="loading-title">ROAD TRIP</div><div class="loading-bar"><span></span></div><div class="loading-text">車両とコースを準備中...</div></div>
+
   <div id="hud">
     <div class="area-row"><span id="area-name">街</span><span id="time-name">朝</span></div>
     <div class="progress"><span id="progress-bar"></span></div>
     <div class="checkpoint" id="checkpoint-text">START</div>
   </div>
+
   <div id="speed"><strong id="speed-value">0</strong><span>km/h</span></div>
   <div id="help">W / ↑ 加速　S / ↓ ブレーキ・後退　A D / ← → 操舵<br>ドラッグ：カメラ　ホイール：ズーム　C：カメラ初期化<br>ゴール後もカメラ操作できます</div>
 
   <div id="virtual-pad" aria-label="スマートフォン操作">
-    <div id="virtual-joystick" aria-label="バーチャルジョイスティック">
-      <div class="joystick-ring"></div>
-      <div id="virtual-knob"></div>
+    <div id="joystick-pad">
+      <div id="joystick-ring"></div>
+      <div id="joystick-knob"></div>
     </div>
   </div>
+
   <div id="finish" hidden>
     <div class="finish-card">
       <p>ROAD TRIP COMPLETE</p>
-      <h1>キャンプ場に到着しました</h1>
+      <h1 id="finish-title">キャンプ場に到着しました</h1>
+      <div class="finish-subtitle" id="finish-subtitle"></div>
+      <ul class="finish-stats" id="finish-stats"></ul>
       <button id="reset-button" type="button">もう一度走る</button>
     </div>
   </div>
+
   <script>
     window.__roadTripWatchdog = setTimeout(function () {
       var loading = document.getElementById("loading");
