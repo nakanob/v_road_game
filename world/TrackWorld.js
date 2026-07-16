@@ -489,18 +489,18 @@ export class TrackWorld {
   }
 
   createField() {
-    this.createDetailedTrees(.26, .48, 90, 10, 42, false);
-    this.createSimpleForest(.25, .49, 260, 12, 58, false);
+    this.createDetailedTrees(.26, .48, 45, 10, 26, false);
+    this.createSimpleForest(.25, .49, 130, 12, 30, false);
     const grassGeo = new THREE.PlaneGeometry(.42, 1.15);
     const grassMat = new THREE.MeshStandardMaterial({ color: 0x7f9c50, roughness: 1, side: THREE.DoubleSide });
-    const count = 5200;
+    const count = 2600;
     const inst = new THREE.InstancedMesh(grassGeo, grassMat, count);
     const d = new THREE.Object3D();
     for (let i = 0; i < count; i++) {
       const t = .245 + Math.random() * .255;
       const s = this.getSample(t);
       const side = Math.random() < .5 ? -1 : 1;
-      const dist = 7 + Math.random() * 54;
+      const dist = 7 + Math.random() * 24;
       d.position.copy(s.point).addScaledVector(s.side, side * dist);
       d.position.y += 0.55 + Math.sin(s.point.z * .04 + dist * .1) * .15;
       d.rotation.y = Math.random() * Math.PI;
@@ -515,103 +515,157 @@ export class TrackWorld {
   }
 
   createRiverAndBridge() {
-    const s = this.getSample(.40);
-    const yaw = Math.atan2(s.tangent.x, s.tangent.z);
-    const group = new THREE.Group();
+    const sample = this.getSample(.40);
+    const roadYaw = Math.atan2(sample.tangent.x, sample.tangent.z);
+    const riverYaw = Math.atan2(sample.side.x, sample.side.z);
 
-    const riverBed = new THREE.Mesh(
-      new THREE.BoxGeometry(150, 1.4, 16),
-      new THREE.MeshStandardMaterial({ color: 0x463a32, roughness: 1 })
-    );
-    riverBed.position.y = -1.18;
-    riverBed.receiveShadow = true;
-    group.add(riverBed);
+    // 川は道路より低い位置に置き、道路を横切る方向へ長く伸ばす。
+    const river = new THREE.Group();
+    const riverBedMat = new THREE.MeshStandardMaterial({ map: this.textures.dirt, color: 0x66503d, roughness: 1 });
+    const bankMat = new THREE.MeshStandardMaterial({ map: this.textures.grass, color: 0x627d42, roughness: 1 });
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x2e91c4,
+      roughness: .16,
+      metalness: .08,
+      transparent: true,
+      opacity: .94,
+      side: THREE.DoubleSide
+    });
 
-    const water = new THREE.Mesh(
-      new THREE.PlaneGeometry(150, 13),
-      new THREE.MeshStandardMaterial({ color: 0x2d82aa, roughness: .18, metalness: .12, transparent: true, opacity: .88, side: THREE.DoubleSide })
-    );
+    const trench = new THREE.Mesh(new THREE.BoxGeometry(30, 4.2, 150), riverBedMat);
+    trench.position.y = -3.0;
+    trench.receiveShadow = true;
+    river.add(trench);
+
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(16, 146), waterMat);
     water.rotation.x = -Math.PI / 2;
-    water.position.y = -0.42;
-    group.add(water);
+    water.position.y = -1.05;
+    river.add(water);
 
-    const bankMat = new THREE.MeshStandardMaterial({ map: this.textures.dirt, color: 0x70543a, roughness: 1 });
-    for (const z of [-10.5, 10.5]) {
-      const bank = new THREE.Mesh(new THREE.BoxGeometry(150, 1.4, 7), bankMat);
-      bank.position.set(0, -0.38, z);
-      bank.rotation.x = z < 0 ? -0.14 : 0.14;
+    for (const x of [-12.5, 12.5]) {
+      const bank = new THREE.Mesh(new THREE.BoxGeometry(9, 3.0, 150), bankMat);
+      bank.position.set(x, -1.05, 0);
       bank.receiveShadow = true;
-      group.add(bank);
+      river.add(bank);
     }
 
-    // 道路面と同じ高さの小さな橋。デッキ上面を y=0.08 にそろえる。
-    const bridge = new THREE.Group();
-    const deckHeight = 0.42;
-    const deck = new THREE.Mesh(
-      new THREE.BoxGeometry(this.roadHalfWidth * 2 + 1.4, deckHeight, 18),
-      new THREE.MeshStandardMaterial({ map: this.textures.asphalt, color: 0x656663, roughness: .88 })
-    );
-    deck.position.y = 0.08 - deckHeight / 2;
-    deck.receiveShadow = true;
-    bridge.add(deck);
+    river.position.copy(sample.point);
+    river.rotation.y = riverYaw;
+    this.scene.add(river);
 
-    const railMat = new THREE.MeshStandardMaterial({ color: 0x596166, roughness: .62, metalness: .25 });
-    for (const x of [-this.roadHalfWidth - .58, this.roadHalfWidth + .58]) {
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(.12, .15, 18), railMat);
-      rail.position.set(x, .76, 0); bridge.add(rail);
-      for (let z = -8; z <= 8; z += 2) {
-        const post = new THREE.Mesh(new THREE.BoxGeometry(.12, 1.28, .12), railMat);
-        post.position.set(x, .20, z); bridge.add(post);
+    // 橋はv8の道路面と同じ高さに合わせ、川の上だけを渡る長さにする。
+    const bridge = new THREE.Group();
+    const concrete = new THREE.MeshStandardMaterial({ color: 0x92989e, roughness: .92 });
+    const asphalt = new THREE.MeshStandardMaterial({ map: this.textures.asphalt, color: 0x606360, roughness: .9 });
+    const steel = new THREE.MeshStandardMaterial({ color: 0x626a70, roughness: .58, metalness: .28 });
+
+    const deckBase = new THREE.Mesh(new THREE.BoxGeometry(this.roadHalfWidth * 2 + 1.8, .52, 22), concrete);
+    deckBase.position.y = -.18;
+    deckBase.receiveShadow = true;
+    bridge.add(deckBase);
+
+    const deckTop = new THREE.Mesh(new THREE.BoxGeometry(this.roadHalfWidth * 2 + .35, .16, 20), asphalt);
+    deckTop.position.y = .10;
+    deckTop.receiveShadow = true;
+    bridge.add(deckTop);
+
+    for (const x of [-this.roadHalfWidth - .62, this.roadHalfWidth + .62]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(.13, .15, 22), steel);
+      rail.position.set(x, .80, 0);
+      bridge.add(rail);
+
+      for (let z = -10; z <= 10; z += 2.5) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(.13, 1.35, .13), steel);
+        post.position.set(x, .20, z);
+        bridge.add(post);
       }
     }
 
-    group.add(bridge);
-    group.position.copy(s.point);
-    group.rotation.y = yaw;
-    this.scene.add(group);
+    for (const z of [-6, 0, 6]) {
+      const pier = new THREE.Mesh(new THREE.BoxGeometry(2.1, 2.6, 1.4), concrete);
+      pier.position.set(0, -1.65, z);
+      bridge.add(pier);
+    }
+
+    bridge.position.copy(sample.point);
+    bridge.rotation.y = roadYaw;
+    this.scene.add(bridge);
   }
 
   createTunnel() {
-    const s = this.getSample(.515);
+    const sample = this.getSample(.515);
     const group = new THREE.Group();
-    const rockMat = new THREE.MeshStandardMaterial({ map: this.textures.rock, color: 0x6f6861, roughness: 1 });
-    const concrete = new THREE.MeshStandardMaterial({ color: 0x8b8984, roughness: .92, side: THREE.DoubleSide });
-    const dark = new THREE.MeshBasicMaterial({ color: 0x17191c, toneMapped: false, side: THREE.DoubleSide });
+    const rockMat = new THREE.MeshStandardMaterial({ map: this.textures.rock, color: 0x706861, roughness: 1 });
+    const concrete = new THREE.MeshStandardMaterial({ color: 0x8d8c87, roughness: .94 });
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x555957, roughness: 1, side: THREE.DoubleSide });
 
-    // 道路空間を空けたまま、岩の塊で自然な山の入口を形成。
-    const rocks = [
-      [-10.5, 2.8, -8, 7.5, 7.0, 10], [10.5, 2.8, -8, 7.5, 7.0, 10],
-      [-12.5, 4.8, 7, 9.5, 10, 11], [12.5, 4.8, 7, 9.5, 10, 11],
-      [-7.5, 10.2, 0, 8.5, 8.0, 13], [7.5, 10.2, 0, 8.5, 8.0, 13],
-      [0, 13.0, 0, 10.0, 7.0, 14]
-    ];
-    for (const [x,y,z,sx,sy,sz] of rocks) {
-      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 1), rockMat);
-      rock.position.set(x,y,z); rock.scale.set(sx,sy,sz); rock.castShadow = rock.receiveShadow = true; group.add(rock);
+    // 道路中央に幅11.8m・高さ7.2mの空洞を確保した通過可能なトンネル。
+    const length = 30;
+    const halfWidth = 5.9;
+    const height = 7.2;
+
+    const leftMountain = new THREE.Mesh(new THREE.BoxGeometry(18, 17, 34), rockMat);
+    leftMountain.position.set(-14.2, 6.2, 0);
+    leftMountain.rotation.z = .40;
+    leftMountain.castShadow = leftMountain.receiveShadow = true;
+    group.add(leftMountain);
+
+    const rightMountain = new THREE.Mesh(new THREE.BoxGeometry(18, 17, 34), rockMat);
+    rightMountain.position.set(14.2, 6.2, 0);
+    rightMountain.rotation.z = -.40;
+    rightMountain.castShadow = rightMountain.receiveShadow = true;
+    group.add(rightMountain);
+
+    const mountainPeak = new THREE.Mesh(new THREE.ConeGeometry(19, 16, 4), rockMat);
+    mountainPeak.position.set(0, 13.0, 0);
+    mountainPeak.rotation.y = Math.PI / 4;
+    mountainPeak.castShadow = mountainPeak.receiveShadow = true;
+    group.add(mountainPeak);
+
+    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(.75, height, length), wallMat);
+    leftWall.position.set(-halfWidth, height / 2, 0);
+    group.add(leftWall);
+
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(.75, height, length), wallMat);
+    rightWall.position.set(halfWidth, height / 2, 0);
+    group.add(rightWall);
+
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(halfWidth * 2, .7, length), wallMat);
+    roof.position.set(0, height - .15, 0);
+    group.add(roof);
+
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(halfWidth * 2 + .7, .08, length), new THREE.MeshStandardMaterial({ map: this.textures.rock, color: 0x5a5149, roughness: 1 }));
+    floor.position.y = .04;
+    group.add(floor);
+
+    for (const z of [-length / 2 + .45, length / 2 - .45]) {
+      const top = new THREE.Mesh(new THREE.BoxGeometry(halfWidth * 2 + 1.8, .85, .9), concrete);
+      top.position.set(0, height + .25, z);
+      group.add(top);
+
+      for (const x of [-halfWidth - .45, halfWidth + .45]) {
+        const side = new THREE.Mesh(new THREE.BoxGeometry(.9, height + 1.0, .9), concrete);
+        side.position.set(x, height / 2, z);
+        group.add(side);
+      }
     }
 
-    const portal = new THREE.Mesh(new THREE.TorusGeometry(7.15, .55, 8, 24, Math.PI), concrete);
-    portal.rotation.z = Math.PI;
-    portal.position.set(0, 0.55, -11.0);
-    group.add(portal);
-    const inner = new THREE.Mesh(new THREE.PlaneGeometry(13.1, 7.2), dark);
-    inner.position.set(0, 3.55, -11.45);
-    group.add(inner);
-    for (const x of [-6.6, 6.6]) {
-      const side = new THREE.Mesh(new THREE.BoxGeometry(.7, 7.2, .8), concrete);
-      side.position.set(x, 3.3, -11.0); group.add(side);
+    for (let z = -11; z <= 11; z += 5.5) {
+      const light = new THREE.PointLight(0xffd09b, .55, 12, 2);
+      light.position.set(0, 5.7, z);
+      group.add(light);
     }
 
-    group.position.copy(s.point);
-    group.position.y -= 0.1;
-    group.rotation.y = Math.atan2(s.tangent.x, s.tangent.z);
+    group.position.copy(sample.point);
+    group.position.y -= .05;
+    group.rotation.y = Math.atan2(sample.tangent.x, sample.tangent.z);
     this.scene.add(group);
   }
 
   createMountain() {
     this.createInstancedRocks(.54, .77, 88);
-    this.createDetailedTrees(.55, .75, 80, 13, 48, true);
-    this.createSimpleForest(.53, .76, 300, 14, 65, true);
+    this.createDetailedTrees(.55, .75, 40, 13, 30, true);
+    this.createSimpleForest(.53, .76, 150, 14, 34, true);
     this.createMountainBackdrop(0.60, -1, 42, 20);
     this.createMountainBackdrop(0.67, 1, 48, 25);
     this.createMountainBackdrop(0.72, -1, 52, 24);
@@ -720,45 +774,200 @@ export class TrackWorld {
     this.scene.add(trunks, crowns);
   }
 
+  createHumanSpriteTexture(index) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 192;
+    canvas.height = 384;
+    const ctx = canvas.getContext("2d");
+    const skins = ["#f3c9aa", "#dfaa83", "#c98e68", "#8e5d42"];
+    const hairs = ["#221712", "#3b291f", "#6e4c31", "#171313"];
+    const tops = ["#587eb3", "#a6534b", "#568153", "#c08d3f", "#756495", "#3e7580"];
+    const bottoms = ["#323a4d", "#4a4036", "#263746", "#494949"];
+    const skin = skins[index % skins.length];
+    const hair = hairs[(index * 3) % hairs.length];
+    const top = tops[index % tops.length];
+    const bottom = bottoms[index % bottoms.length];
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const bodyGradient = ctx.createLinearGradient(55, 115, 140, 230);
+    bodyGradient.addColorStop(0, top);
+    bodyGradient.addColorStop(1, "#27313d");
+    ctx.fillStyle = bodyGradient;
+    ctx.beginPath();
+    ctx.moveTo(66, 118);
+    ctx.quadraticCurveTo(96, 102, 126, 118);
+    ctx.lineTo(138, 226);
+    ctx.quadraticCurveTo(96, 244, 54, 226);
+    ctx.closePath();
+    ctx.fill();
+
+    // neck and head
+    ctx.fillStyle = skin;
+    ctx.fillRect(84, 90, 24, 30);
+    ctx.beginPath();
+    ctx.ellipse(96, 67, 35, 43, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ears
+    ctx.beginPath(); ctx.ellipse(59, 70, 7, 12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(133, 70, 7, 12, 0, 0, Math.PI * 2); ctx.fill();
+
+    // hair with variations
+    ctx.fillStyle = hair;
+    ctx.beginPath();
+    ctx.ellipse(96, 48, 37, 30, 0, Math.PI, Math.PI * 2);
+    ctx.lineTo(60, 67);
+    ctx.quadraticCurveTo(62, 28, 96, 24);
+    ctx.quadraticCurveTo(132, 28, 133, 67);
+    ctx.closePath();
+    ctx.fill();
+    if (index % 3 === 0) {
+      ctx.fillRect(61, 45, 9, 38);
+      ctx.fillRect(122, 45, 9, 38);
+    }
+
+    // eyes, eyebrows, nose, mouth
+    ctx.strokeStyle = "#3a2a24";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(72, 60); ctx.lineTo(85, 57); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(107, 57); ctx.lineTo(120, 60); ctx.stroke();
+    ctx.fillStyle = "#201a18";
+    ctx.beginPath(); ctx.ellipse(80, 68, 3.2, 4.2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(112, 68, 3.2, 4.2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#a66a53";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(96, 68); ctx.lineTo(92, 82); ctx.lineTo(99, 83); ctx.stroke();
+    ctx.strokeStyle = "#9d4d48";
+    ctx.beginPath(); ctx.arc(96, 89, 10, .15, Math.PI - .15); ctx.stroke();
+
+    // arms with natural elbows
+    ctx.strokeStyle = top;
+    ctx.lineWidth = 22;
+    ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(63, 135); ctx.lineTo(39, 186); ctx.lineTo(50, 232); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(129, 135); ctx.lineTo(153, 184); ctx.lineTo(142, 229); ctx.stroke();
+    ctx.strokeStyle = skin;
+    ctx.lineWidth = 14;
+    ctx.beginPath(); ctx.moveTo(50, 232); ctx.lineTo(55, 249); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(142, 229); ctx.lineTo(137, 248); ctx.stroke();
+
+    // trousers and legs with realistic proportions
+    ctx.fillStyle = bottom;
+    ctx.beginPath();
+    ctx.moveTo(61, 222); ctx.lineTo(91, 222); ctx.lineTo(86, 337); ctx.lineTo(58, 337); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(101, 222); ctx.lineTo(131, 222); ctx.lineTo(134, 337); ctx.lineTo(106, 337); ctx.closePath(); ctx.fill();
+
+    // shoes
+    ctx.fillStyle = "#191919";
+    ctx.beginPath(); ctx.roundRect(48, 330, 42, 22, 8); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(103, 330, 42, 22, 8); ctx.fill();
+
+    // beverage / plate variation
+    if (index % 4 === 0) {
+      ctx.fillStyle = "#e5e4df";
+      ctx.fillRect(131, 207, 16, 30);
+      ctx.fillStyle = "#d79a42";
+      ctx.fillRect(134, 215, 10, 16);
+    } else if (index % 4 === 1) {
+      ctx.fillStyle = "#f4f0e5";
+      ctx.beginPath(); ctx.ellipse(45, 226, 18, 7, 0, 0, Math.PI * 2); ctx.fill();
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
   createWelcomeCamp() {
     const finish = this.getSample(.985);
     const base = finish.point.clone().addScaledVector(finish.side, 14);
     const group = new THREE.Group();
-    const skin = new THREE.MeshStandardMaterial({ color: 0xd9a276, roughness: .9 });
-    const shirtColors = [0xd34c45,0x3b7fc4,0xe6a33c,0x57a36c,0x8b61b3,0xf1d15c];
     const dark = new THREE.MeshStandardMaterial({ color: 0x2b3035, roughness: .9 });
+    const wood = new THREE.MeshStandardMaterial({ map: this.textures.bark, color: 0x64442d, roughness: 1 });
 
-    for (let i = 0; i < 20; i++) {
-      const person = new THREE.Group();
-      const angle = (i / 20) * Math.PI * 2;
-      const radius = 5.5 + (i % 4) * 1.1;
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(.25, .34, 1.05, 7), new THREE.MeshStandardMaterial({ color: shirtColors[i % shirtColors.length], roughness: .9 }));
-      body.position.y = 1.15; person.add(body);
-      const head = new THREE.Mesh(new THREE.SphereGeometry(.25, 10, 8), skin); head.position.y = 1.92; person.add(head);
-      for (const x of [-.14,.14]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(.07,.08,.72,6), dark); leg.position.set(x,.38,0); person.add(leg); }
-      // 腕を上げた歓迎ポーズを一部に付ける。
-      for (const side of [-1,1]) {
-        const arm = new THREE.Mesh(new THREE.CylinderGeometry(.055,.065,.65,6), skin);
-        arm.position.set(side*.36,1.35,0); arm.rotation.z = side * (i % 3 === 0 ? -1.0 : -.55); person.add(arm);
-      }
-      person.position.set(Math.cos(angle)*radius, 0, Math.sin(angle)*radius);
-      person.rotation.y = -angle + Math.PI/2;
+    // 人物はリアルな頭身の透過スプライトに変更。常にカメラ方向を向くため判別しやすい。
+    const positions = [
+      [-7,-4],[-4,-6],[-1,-7],[3,-6],[7,-4],
+      [-8,0],[-5,1],[-2,2],[2,2],[5,1],[8,0],
+      [-7,5],[-4,6],[-1,7],[3,7],[7,5],
+      [-3,-1],[3,-1],[-3,4],[3,4]
+    ];
+
+    positions.forEach(([x, z], index) => {
+      const material = new THREE.SpriteMaterial({
+        map: this.createHumanSpriteTexture(index),
+        transparent: true,
+        alphaTest: .08,
+        depthWrite: false
+      });
+      const person = new THREE.Sprite(material);
+      person.scale.set(1.7, 3.4, 1);
+      person.position.set(x, 1.70, z);
       group.add(person);
+    });
+
+    // バーベキューグリルと食卓。
+    const grill = new THREE.Mesh(new THREE.BoxGeometry(2.1,.55,1.0), dark);
+    grill.position.set(0,.85,0);
+    group.add(grill);
+
+    for (const x of [-.75,.75]) {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,1.2,6), dark);
+      leg.position.set(x,.3,0);
+      group.add(leg);
     }
 
-    // バーベキューグリルとテーブル。
-    const grill = new THREE.Mesh(new THREE.BoxGeometry(2.1,.55,1.0), dark); grill.position.set(0,.85,0); group.add(grill);
-    for (const x of [-.75,.75]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,1.2,6), dark); leg.position.set(x,.3,0); group.add(leg); }
-    const coals = new THREE.Mesh(new THREE.BoxGeometry(1.7,.08,.7), new THREE.MeshBasicMaterial({ color:0xff6b2b,toneMapped:false })); coals.position.set(0,1.17,0); group.add(coals);
-    const warm = new THREE.PointLight(0xffb05a, 8, 24, 2); warm.position.set(0,3,0); group.add(warm);
+    const coals = new THREE.Mesh(new THREE.BoxGeometry(1.7,.08,.7), new THREE.MeshBasicMaterial({ color:0xff6b2b,toneMapped:false }));
+    coals.position.set(0,1.17,0);
+    group.add(coals);
+
+    for (const [x, z] of [[-4,3.2],[4,3.2],[-4,-2.8],[4,-2.8]]) {
+      const table = new THREE.Mesh(new THREE.BoxGeometry(2.3,.12,1.2), wood);
+      table.position.set(x,.92,z);
+      group.add(table);
+      for (const dx of [-.85,.85]) {
+        for (const dz of [-.35,.35]) {
+          const leg = new THREE.Mesh(new THREE.BoxGeometry(.11,.84,.11), wood);
+          leg.position.set(x + dx,.42,z + dz);
+          group.add(leg);
+        }
+      }
+    }
+
+    // ランタンを増やし、ライトを当てなくても人物とBBQが見える明るさにする。
+    for (const [x, z] of [[-8,-6],[0,-8],[8,-6],[-9,2],[9,2],[-7,8],[0,9],[7,8]]) {
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,1.7,8), dark);
+      pole.position.set(x,.85,z);
+      group.add(pole);
+
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(.17,12,10), new THREE.MeshBasicMaterial({ color:0xffd798,toneMapped:false }));
+      bulb.position.set(x,1.63,z);
+      group.add(bulb);
+
+      const lanternLight = new THREE.PointLight(0xffcf93, 2.2, 16, 2);
+      lanternLight.position.set(x,1.65,z);
+      group.add(lanternLight);
+    }
+
+    const bbqLight = new THREE.PointLight(0xffa85a, 5.5, 22, 2);
+    bbqLight.position.set(0,3,0);
+    group.add(bbqLight);
+
+    const ambientWelcome = new THREE.PointLight(0xffd8aa, 2.5, 30, 2);
+    ambientWelcome.position.set(0,5,1);
+    group.add(ambientWelcome);
+
     group.position.copy(base);
     group.rotation.y = Math.atan2(finish.tangent.x, finish.tangent.z);
     this.scene.add(group);
   }
 
   createCampground() {
-    this.createDetailedTrees(.77, .98, 72, 12, 50, true);
-    this.createSimpleForest(.77, .99, 250, 14, 62, true);
+    this.createDetailedTrees(.77, .98, 36, 12, 30, true);
+    this.createSimpleForest(.77, .99, 125, 14, 34, true);
     for (let i = 0; i < 9; i++) {
       const t = .80 + i * .021;
       const s = this.getSample(t);

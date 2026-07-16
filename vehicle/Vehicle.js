@@ -24,6 +24,10 @@ export class Vehicle {
     this.drag = 3.8;
     this.steer = 0;
     this.finished = false;
+    this.elapsedTime = 0;
+    this.collisionCount = 0;
+    this.arrivalSpeed = 0;
+    this.wallContact = false;
 
     const startPose = this.world.getPose(this.progress, 0);
     this.heading = Math.atan2(startPose.tangent.x, startPose.tangent.z);
@@ -188,6 +192,7 @@ export class Vehicle {
   update(delta) {
     if (!this.model || this.finished) return;
 
+    this.elapsedTime += delta;
     this.updateSpeed(delta);
     this.updateSteering(delta);
 
@@ -202,10 +207,15 @@ export class Vehicle {
 
     if (nextLaneOffset < -limit || nextLaneOffset > limit) {
       this.laneOffset = THREE.MathUtils.clamp(nextLaneOffset, -limit, limit);
-      // 道路外へ向かった場合は横滑りさせず、速度をなめらかに落とす。
+      if (!this.wallContact) {
+        this.collisionCount += 1;
+        this.wallContact = true;
+      }
+      // v8の操作感を維持しながら、道路端では減速する。
       this.speed = THREE.MathUtils.damp(this.speed, 0, 8.5, delta);
     } else {
       this.laneOffset = nextLaneOffset;
+      this.wallContact = false;
     }
 
     this.placeAtProgress(delta);
@@ -215,11 +225,12 @@ export class Vehicle {
 
     if (this.progress >= 0.997) {
       this.progress = 0.997;
+      this.arrivalSpeed = this.speedKmh;
       this.speed = 0;
       this.finished = true;
       this.input.reset();
       this.placeAtProgress(delta);
-      this.game.ui?.showFinish();
+      this.game.ui?.showFinish(this.getResult());
     }
   }
 
@@ -238,14 +249,15 @@ export class Vehicle {
 
   updateSteering(delta) {
     let target = 0;
-    // 画面上の左・右と一致する向きに統一。
-    if (this.input.keys.left) target = 1;
-    if (this.input.keys.right) target = -1;
+    // v8で逆転していた左右入力だけを修正。
+    if (this.input.keys.left) target = -1;
+    if (this.input.keys.right) target = 1;
 
     this.steer = THREE.MathUtils.damp(this.steer, target, 10, delta);
     const speedRatio = THREE.MathUtils.clamp(Math.abs(this.speed) / 8, 0, 1);
     const yawRate = this.steer * Math.abs(this.speed) * (0.032 + speedRatio * 0.020);
-    this.heading -= yawRate * delta;
+    const reverseDirection = this.speed < 0 ? -1 : 1;
+    this.heading -= yawRate * delta * reverseDirection;
   }
 
   placeAtProgress(delta = 0.016, immediate = false) {
@@ -319,6 +331,27 @@ export class Vehicle {
     }
   }
 
+  getResult() {
+    const collisions = this.collisionCount;
+    const seconds = this.elapsedTime;
+    const titles = [];
+
+    if (collisions === 0 && seconds <= 120) titles.push("パーフェクトヒューマン");
+    if (seconds <= 120) titles.push("スピードキング");
+    if (collisions >= 20) titles.push("期待のルーキー");
+    else if (collisions >= 10) titles.push("ベテランドライバー");
+    else if (collisions >= 1) titles.push("キャンピングカーの達人");
+    if (titles.length === 0) titles.push("ロードトリップ完走者");
+
+    return {
+      title: titles[0],
+      extraTitles: titles.slice(1),
+      collisions,
+      seconds,
+      arrivalSpeed: this.arrivalSpeed
+    };
+  }
+
   reset() {
     this.input.reset();
     this.progress = 0.006;
@@ -328,6 +361,10 @@ export class Vehicle {
     const startPose = this.world.getPose(this.progress, 0);
     this.heading = Math.atan2(startPose.tangent.x, startPose.tangent.z);
     this.finished = false;
+    this.elapsedTime = 0;
+    this.collisionCount = 0;
+    this.arrivalSpeed = 0;
+    this.wallContact = false;
     this.placeAtProgress(1, true);
   }
 

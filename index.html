@@ -26,19 +26,17 @@
   <div id="help">W / ↑ 加速　S / ↓ ブレーキ・後退　A D / ← → 操舵<br>ドラッグ：カメラ　ホイール：ズーム　C：カメラ初期化<br>ゴール後もカメラ操作できます</div>
 
   <div id="virtual-pad" aria-label="スマートフォン操作">
-    <div class="steer-pad">
-      <button type="button" data-control="left" aria-label="左">←</button>
-      <button type="button" data-control="right" aria-label="右">→</button>
-    </div>
-    <div class="drive-pad">
-      <button type="button" data-control="forward" aria-label="加速">↑</button>
-      <button type="button" data-control="backward" aria-label="ブレーキと後退">↓</button>
+    <div id="joystick-pad">
+      <div id="joystick-ring"></div>
+      <div id="joystick-knob"></div>
     </div>
   </div>
   <div id="finish" hidden>
     <div class="finish-card">
       <p>ROAD TRIP COMPLETE</p>
-      <h1>キャンプ場に到着しました</h1>
+      <h1 id="finish-title">キャンプ場に到着しました</h1>
+      <div id="finish-extra" class="finish-extra"></div>
+      <ul id="finish-stats" class="finish-stats"></ul>
       <button id="reset-button" type="button">もう一度走る</button>
     </div>
   </div>
@@ -50,6 +48,6 @@
       if (text) text.textContent = "読み込みに失敗しました。ファイル構成または通信状態を確認してください。";
     }, 15000);
   </script>
-  <script type="module" src="./main.js?v=8"></script>
+  <script type="module" src="./main.js?v=8-patch1"></script>
 </body>
 </html>
