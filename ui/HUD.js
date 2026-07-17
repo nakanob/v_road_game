@@ -1,89 +1,590 @@
+// ============================================================================
 // ui/HUD.js
+// Part 1
+// ゴール結果画面
+// ============================================================================
 
-export class HUD {
+createResultScreen() {
 
-    constructor(sceneManager, vehicle) {
+    this.resultScreen =
+        document.createElement("div");
 
-        this.sceneManager = sceneManager;
-        this.vehicle = vehicle;
+    this.resultScreen.id =
+        "resultScreen";
 
-        this.root = document.createElement("div");
+    Object.assign(
 
-        this.root.id = "hud";
+        this.resultScreen.style,
 
-        this.root.innerHTML = `
+        {
 
-            <div id="hud-panel">
+            position:
+                "fixed",
 
-                <div id="speed">0 km/h</div>
+            inset:
+                "0",
 
-                <div id="position">X:0 Z:0</div>
+            display:
+                "none",
 
-                <div id="fps">FPS:0</div>
+            alignItems:
+                "center",
 
-            </div>
+            justifyContent:
+                "center",
 
-        `;
+            padding:
+                "24px",
 
-        document.body.appendChild(this.root);
+            boxSizing:
+                "border-box",
 
-        this.speedElement =
-            document.getElementById("speed");
+            background:
+                "rgba(0, 0, 0, 0.72)",
 
-        this.positionElement =
-            document.getElementById("position");
+            backdropFilter:
+                "blur(8px)",
 
-        this.fpsElement =
-            document.getElementById("fps");
+            zIndex:
+                "100000",
 
-        this.frameCount = 0;
+            fontFamily:
+                "Arial, Helvetica, sans-serif"
 
-        this.elapsed = 0;
+        }
 
-        this.fps = 0;
-        this.fastElapsed = 0;
+    );
+
+    const panel =
+        document.createElement("div");
+
+    panel.id =
+        "resultPanel";
+
+    Object.assign(
+
+        panel.style,
+
+        {
+
+            width:
+                "min(520px, 100%)",
+
+            padding:
+                "36px 28px 30px",
+
+            boxSizing:
+                "border-box",
+
+            borderRadius:
+                "18px",
+
+            background:
+                "rgba(20, 24, 30, 0.96)",
+
+            border:
+                "1px solid rgba(255, 255, 255, 0.18)",
+
+            boxShadow:
+                "0 24px 80px rgba(0, 0, 0, 0.55)",
+
+            color:
+                "#ffffff",
+
+            textAlign:
+                "center"
+
+        }
+
+    );
+
+    this.resultTitle =
+        document.createElement("div");
+
+    Object.assign(
+
+        this.resultTitle.style,
+
+        {
+
+            marginBottom:
+                "26px",
+
+            fontSize:
+                "clamp(38px, 9vw, 68px)",
+
+            fontWeight:
+                "800",
+
+            letterSpacing:
+                "0.08em",
+
+            lineHeight:
+                "1",
+
+            textShadow:
+                "0 0 24px rgba(255, 255, 255, 0.25)"
+
+        }
+
+    );
+
+    this.resultTitle.textContent =
+        "GOAL";
+
+    this.resultRows =
+        document.createElement("div");
+
+    Object.assign(
+
+        this.resultRows.style,
+
+        {
+
+            display:
+                "grid",
+
+            gap:
+                "12px",
+
+            marginBottom:
+                "28px"
+
+        }
+
+    );
+
+    this.resultTimeRow =
+        this.createResultRow(
+
+            "ARRIVAL TIME",
+
+            "00:00.00"
+
+        );
+
+    this.resultCollisionRow =
+        this.createResultRow(
+
+            "COLLISIONS",
+
+            "0"
+
+        );
+
+    this.resultSpeedRow =
+        this.createResultRow(
+
+            "ARRIVAL SPEED",
+
+            "0 km/h"
+
+        );
+
+    this.resultRows.append(
+
+        this.resultTimeRow.element,
+
+        this.resultCollisionRow.element,
+
+        this.resultSpeedRow.element
+
+    );
+
+    this.retryButton =
+        document.createElement("button");
+
+    this.retryButton.type =
+        "button";
+
+    this.retryButton.textContent =
+        "RETRY";
+
+    Object.assign(
+
+        this.retryButton.style,
+
+        {
+
+            width:
+                "100%",
+
+            minHeight:
+                "54px",
+
+            border:
+                "0",
+
+            borderRadius:
+                "12px",
+
+            background:
+                "#ffffff",
+
+            color:
+                "#111111",
+
+            fontSize:
+                "18px",
+
+            fontWeight:
+                "700",
+
+            letterSpacing:
+                "0.08em",
+
+            cursor:
+                "pointer",
+
+            touchAction:
+                "manipulation"
+
+        }
+
+    );
+
+    this.retryButton.addEventListener(
+
+        "pointerdown",
+
+        event => {
+
+            event.stopPropagation();
+
+        }
+
+    );
+
+    this.retryButton.addEventListener(
+
+        "click",
+
+        () => {
+
+            this.hideResult();
+
+            if (
+                this.game?.restart
+            ) {
+
+                this.game.restart();
+
+                return;
+
+            }
+
+            if (
+                this.game?.vehicle?.reset
+            ) {
+
+                this.game.vehicle.reset();
+
+            }
+
+        }
+
+    );
+
+    panel.append(
+
+        this.resultTitle,
+
+        this.resultRows,
+
+        this.retryButton
+
+    );
+
+    this.resultScreen.appendChild(
+        panel
+    );
+
+    document.body.appendChild(
+        this.resultScreen
+    );
+
+}
+
+
+// ============================================================================
+// 結果表示の1行
+// ============================================================================
+
+createResultRow(
+
+    label,
+
+    initialValue
+
+) {
+
+    const element =
+        document.createElement("div");
+
+    Object.assign(
+
+        element.style,
+
+        {
+
+            display:
+                "grid",
+
+            gridTemplateColumns:
+                "minmax(0, 1fr) auto",
+
+            alignItems:
+                "center",
+
+            gap:
+                "18px",
+
+            padding:
+                "14px 16px",
+
+            borderRadius:
+                "10px",
+
+            background:
+                "rgba(255, 255, 255, 0.07)",
+
+            border:
+                "1px solid rgba(255, 255, 255, 0.08)",
+
+            textAlign:
+                "left"
+
+        }
+
+    );
+
+    const labelElement =
+        document.createElement("span");
+
+    labelElement.textContent =
+        label;
+
+    Object.assign(
+
+        labelElement.style,
+
+        {
+
+            color:
+                "rgba(255, 255, 255, 0.68)",
+
+            fontSize:
+                "13px",
+
+            fontWeight:
+                "700",
+
+            letterSpacing:
+                "0.08em"
+
+        }
+
+    );
+
+    const valueElement =
+        document.createElement("span");
+
+    valueElement.textContent =
+        initialValue;
+
+    Object.assign(
+
+        valueElement.style,
+
+        {
+
+            color:
+                "#ffffff",
+
+            fontSize:
+                "20px",
+
+            fontWeight:
+                "700",
+
+            whiteSpace:
+                "nowrap"
+
+        }
+
+    );
+
+    element.append(
+
+        labelElement,
+
+        valueElement
+
+    );
+
+    return {
+
+        element,
+
+        value:
+            valueElement
+
+    };
+
+}
+
+
+// ============================================================================
+// 結果画面表示
+// ============================================================================
+
+showFinish(result = {}) {
+
+    if (
+        !this.resultScreen
+    ) {
+
+        this.createResultScreen();
 
     }
 
-    update(delta) {
+    this.resultTitle.textContent =
 
-        this.fastElapsed += delta;
+        result.title ||
 
-        if (this.fastElapsed >= 0.1) {
+        "GOAL";
 
-            this.speedElement.textContent =
+    this.resultTimeRow.value.textContent =
 
-                `Speed : ${Math.round(
-                    Math.abs(this.vehicle.speed) * 3.6
-                )} km/h`;
+        result.arrivalTime ||
 
-            this.positionElement.textContent =
+        "00:00.00";
 
-                `X : ${this.vehicle.position.x.toFixed(1)}
-                 Z : ${this.vehicle.position.z.toFixed(1)}`;
+    this.resultCollisionRow.value.textContent =
 
-            this.fastElapsed = 0;
+        String(
 
-        }
+            result.collisionCount ?? 0
 
-        this.frameCount++;
+        );
 
-        this.elapsed += delta;
+    this.resultSpeedRow.value.textContent =
 
-        if (this.elapsed >= 1) {
+        `${Math.round(
 
-            this.fps = this.frameCount;
+            result.arrivalSpeed ?? 0
 
-            this.frameCount = 0;
+        )} km/h`;
 
-            this.elapsed = 0;
+    this.resultScreen.style.display =
+        "flex";
 
-            this.fpsElement.textContent =
+    document.body.style.overflow =
+        "hidden";
 
-                `FPS : ${this.fps}`;
+    if (
+        this.game?.vehicle?.input
+    ) {
 
-        }
+        this.game.vehicle.input
+            .resetVirtualJoystick?.();
+
+        this.game.vehicle.input
+            .setEnabled?.(false);
 
     }
 
 }
+
+
+// ============================================================================
+// 結果画面を閉じる
+// ============================================================================
+
+hideResult() {
+
+    if (
+        !this.resultScreen
+    ) {
+
+        return;
+
+    }
+
+    this.resultScreen.style.display =
+        "none";
+
+    document.body.style.overflow =
+        "";
+
+    if (
+        this.game?.vehicle?.input
+    ) {
+
+        this.game.vehicle.input
+            .setEnabled?.(true);
+
+    }
+
+}
+
+
+// ============================================================================
+// HUD破棄
+// ============================================================================
+
+disposeResultScreen() {
+
+    if (
+        !this.resultScreen
+    ) {
+
+        return;
+
+    }
+
+    this.resultScreen.remove();
+
+    this.resultScreen =
+        null;
+
+    this.resultTitle =
+        null;
+
+    this.resultRows =
+        null;
+
+    this.resultTimeRow =
+        null;
+
+    this.resultCollisionRow =
+        null;
+
+    this.resultSpeedRow =
+        null;
+
+    this.retryButton =
+        null;
+
+}
+
+
+// ============================================================================
+// HUD constructor() の最後に追加
+// ============================================================================
+
+this.resultScreen = null;
+
+this.resultTitle = null;
+
+this.resultRows = null;
+
+this.resultTimeRow = null;
+
+this.resultCollisionRow = null;
+
+this.resultSpeedRow = null;
+
+this.retryButton = null;
+
+this.createResultScreen();
