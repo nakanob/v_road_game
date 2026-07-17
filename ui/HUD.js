@@ -588,3 +588,237 @@ this.resultSpeedRow = null;
 this.retryButton = null;
 
 this.createResultScreen();
+
+// ============================================================================
+// ui/HUD.js
+// Part 2
+// スピードメーター・衝突回数・タイマー
+// 軽量版（DOM更新のみ）
+// ============================================================================
+
+createGameHUD() {
+
+    this.gameHUD =
+        document.createElement("div");
+
+    this.gameHUD.id =
+        "gameHUD";
+
+    Object.assign(
+
+        this.gameHUD.style,
+
+        {
+
+            position:"fixed",
+
+            top:"18px",
+
+            left:"18px",
+
+            zIndex:9999,
+
+            color:"#fff",
+
+            fontFamily:"Arial",
+
+            textShadow:"0 2px 5px rgba(0,0,0,.6)",
+
+            userSelect:"none",
+
+            pointerEvents:"none"
+
+        }
+
+    );
+
+    //----------------------------------
+    // SPEED
+    //----------------------------------
+
+    this.speedText =
+        document.createElement("div");
+
+    this.speedText.style.fontSize =
+        "42px";
+
+    this.speedText.style.fontWeight =
+        "700";
+
+    this.speedText.innerHTML =
+        "0 <span style='font-size:18px'>km/h</span>";
+
+    //----------------------------------
+    // TIMER
+    //----------------------------------
+
+    this.timerText =
+        document.createElement("div");
+
+    this.timerText.style.marginTop =
+        "12px";
+
+    this.timerText.style.fontSize =
+        "22px";
+
+    this.timerText.innerHTML =
+        "TIME 00:00.00";
+
+    //----------------------------------
+    // HIT
+    //----------------------------------
+
+    this.hitText =
+        document.createElement("div");
+
+    this.hitText.style.marginTop =
+        "8px";
+
+    this.hitText.style.fontSize =
+        "22px";
+
+    this.hitText.innerHTML =
+        "HIT 0";
+
+    this.gameHUD.appendChild(
+
+        this.speedText
+
+    );
+
+    this.gameHUD.appendChild(
+
+        this.timerText
+
+    );
+
+    this.gameHUD.appendChild(
+
+        this.hitText
+
+    );
+
+    document.body.appendChild(
+
+        this.gameHUD
+
+    );
+
+}
+
+// ============================================================================
+// 更新
+// 毎フレーム呼び出し
+// ============================================================================
+
+updateHUD(vehicle){
+
+    if(
+        !vehicle
+    ) return;
+
+    //----------------------------------
+    // SPEED
+    //----------------------------------
+
+    const kmh =
+
+        Math.round(
+
+            vehicle.speedKmh
+
+        );
+
+    this.speedText.innerHTML =
+
+        kmh +
+
+        " <span style='font-size:18px'>km/h</span>";
+
+    //----------------------------------
+    // TIME
+    //----------------------------------
+
+    const t =
+
+        vehicle.elapsedTime;
+
+    const min =
+
+        Math.floor(
+
+            t/60
+
+        );
+
+    const sec =
+
+        Math.floor(
+
+            t%60
+
+        );
+
+    const ms =
+
+        Math.floor(
+
+            (t-Math.floor(t))*100
+
+        );
+
+    this.timerText.innerHTML =
+
+        "TIME " +
+
+        String(min).padStart(2,"0") +
+
+        ":" +
+
+        String(sec).padStart(2,"0") +
+
+        "." +
+
+        String(ms).padStart(2,"0");
+
+    //----------------------------------
+    // HIT
+    //----------------------------------
+
+    this.hitText.innerHTML =
+
+        "HIT " +
+
+        vehicle.collisionCount;
+
+}
+
+// ============================================================================
+// GameLoopから毎フレーム呼ぶ
+// ============================================================================
+
+update(delta){
+
+    if(
+
+        this.game &&
+
+        this.game.vehicle
+
+    ){
+
+        this.updateHUD(
+
+            this.game.vehicle
+
+        );
+
+    }
+
+}
+
+// ============================================================================
+// constructor最後
+// ============================================================================
+
+this.createGameHUD();
