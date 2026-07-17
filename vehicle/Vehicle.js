@@ -1,374 +1,1047 @@
-import * as THREE from "three";
-import { InputManager } from "./InputManager.js";
-import { TailLampFactory } from "./TailLampFactory.js";
+// ============================================================================
+// vehicle/Vehicle.js
+// Part 1
+// ジョイスティック入力・左右操作・バック時の操舵を統合
+// ============================================================================
 
-export class Vehicle {
-  constructor(game, world) {
-    this.game = game;
-    this.scene = game.scene;
-    this.world = world;
-    this.input = new InputManager();
+update(delta) {
 
-    this.root = new THREE.Group();
-    this.bodyPivot = new THREE.Group();
-    this.root.add(this.bodyPivot);
-    this.scene.add(this.root);
+    if (
+        !this.model ||
+        this.finished
+    ) {
 
-    this.progress = 0.006;
-    this.laneOffset = 0;
-    this.speed = 0;
-    this.maxSpeed = 25;
-    this.maxReverse = 5;
-    this.acceleration = 9.0;
-    this.brakePower = 17;
-    this.drag = 3.8;
-    this.steer = 0;
-    this.finished = false;
-    this.elapsedTime = 0;
-    this.collisionCount = 0;
-    this.arrivalSpeed = 0;
-    this.wallContact = false;
+        return;
 
-    const startPose = this.world.getPose(this.progress, 0);
-    this.heading = Math.atan2(startPose.tangent.x, startPose.tangent.z);
-
-    this.dimensions = new THREE.Vector3(2.36, 3.02, 5.25);
-    this.headLights = [];
-    this.tailLights = [];
-    this.tailLampShape = "double";
-
-    this.createCamper();
-    this.createLights();
-    this.placeAtProgress(1, true);
-  }
-
-  createCamper() {
-    const camper = new THREE.Group();
-    camper.name = "dyna-based-camper";
-
-    const white = new THREE.MeshStandardMaterial({ color: 0xf6f5f1, roughness: 0.58, metalness: 0.04 });
-    const white2 = new THREE.MeshStandardMaterial({ color: 0xe8e7e3, roughness: 0.64, metalness: 0.03 });
-    const trim = new THREE.MeshStandardMaterial({ color: 0xa7aaad, roughness: 0.46, metalness: 0.34 });
-    const dark = new THREE.MeshStandardMaterial({ color: 0x171b1f, roughness: 0.84, metalness: 0.08 });
-    const blackPlastic = new THREE.MeshStandardMaterial({ color: 0x282d31, roughness: 0.72, metalness: 0.06 });
-    const glass = new THREE.MeshStandardMaterial({ color: 0x6e9ca9, roughness: 0.16, metalness: 0.08, transparent: true, opacity: 0.78 });
-    const redLamp = new THREE.MeshBasicMaterial({ color: 0xff3428, toneMapped: false });
-    const amberLamp = new THREE.MeshBasicMaterial({ color: 0xffa23a, toneMapped: false });
-    const clearLamp = new THREE.MeshBasicMaterial({ color: 0xf4f2e9, toneMapped: false });
-
-    const addBox = (size, pos, material, parent = camper) => {
-      const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material);
-      mesh.position.set(...pos);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      parent.add(mesh);
-      return mesh;
-    };
-
-    // シャシー・居住部。天井は水平で、天窓や突起は付けない。
-    addBox([2.28, 0.72, 4.95], [0, 0.80, -0.02], white2);
-    addBox([2.24, 1.72, 3.72], [0, 1.92, -0.42], white);
-    addBox([2.26, 0.14, 3.78], [0, 2.85, -0.42], white2);
-
-    // トラックキャブ。前面窓を傾け、その傾き分だけバンク部が前へ出る。
-    addBox([2.10, 1.18, 1.38], [0, 1.57, 1.77], white);
-    const windshield = addBox([1.82, 0.67, 0.06], [0, 1.88, 2.42], glass);
-    windshield.rotation.x = -0.13;
-
-    // バンク部。車両フロントより前へ突き出さない。
-    addBox([2.30, 0.78, 2.34], [0, 2.48, 1.08], white);
-    addBox([2.28, 0.35, 0.76], [0, 2.31, 2.16], white2);
-
-    // 運転席・助手席窓（トヨタ・ダイナ系の縦長キャブ窓を意識）。
-    for (const side of [-1, 1]) {
-      const cabWindow = addBox([0.06, 0.72, 0.88], [side * 1.075, 1.92, 1.62], glass);
-      cabWindow.rotation.y = 0;
-      addBox([0.07, 0.11, 1.22], [side * 1.12, 1.22, 1.62], blackPlastic);
     }
-
-    // 居住部の窓。左右は必要最低限に整理。
-    addBox([0.06, 0.74, 1.34], [-1.13, 2.03, 0.12], glass);
-    addBox([0.06, 0.63, 0.98], [-1.13, 2.03, -1.27], glass);
-    addBox([0.06, 0.72, 1.38], [1.13, 2.03, 0.02], glass);
-    addBox([0.06, 0.54, 0.78], [1.13, 2.08, -1.43], glass);
-
-    // 左側中央の閉じた扉。車体からはみ出さない。
-    const sideDoor = addBox([0.055, 1.56, 0.76], [-1.145, 1.78, -0.94], white2);
-    addBox([0.06, 0.50, 0.48], [-1.18, 2.04, -0.95], glass);
-    addBox([0.07, 0.08, 0.20], [-1.185, 1.67, -0.70], dark);
-    sideDoor.castShadow = true;
-
-    // 右側は扉なし。収納扉のみ低い位置に配置。
-    addBox([0.055, 0.44, 0.78], [1.145, 0.97, -1.36], white2);
-    addBox([0.055, 0.42, 0.66], [1.145, 0.96, 0.34], white2);
-
-    // 後面は窓を中心にし、大きな白いパネルは置かない。
-    addBox([1.42, 0.60, 0.06], [0, 2.07, -2.51], glass);
-    addBox([1.16, 0.06, 0.055], [0, 1.68, -2.53], redLamp);
-
-    // はしごは屋根より上に出さない。
-    const ladderMat = new THREE.MeshStandardMaterial({ color: 0xb8bcc1, roughness: 0.35, metalness: 0.75 });
-    for (const x of [0.72, 0.94]) {
-      const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 1.55, 8), ladderMat);
-      rail.position.set(x, 2.04, -2.48);
-      rail.castShadow = true;
-      camper.add(rail);
-    }
-    for (let y = 1.42; y <= 2.68; y += 0.31) {
-      const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.023, 0.023, 0.25, 8), ladderMat);
-      rung.rotation.z = Math.PI / 2;
-      rung.position.set(0.83, y, -2.48);
-      rung.castShadow = true;
-      camper.add(rung);
-    }
-
-    // フロントグリル・バンパー・ワイパー・ミラー。
-    addBox([1.78, 0.18, 0.09], [0, 1.20, 2.53], blackPlastic);
-    for (let y = 1.02; y <= 1.17; y += 0.05) addBox([1.18, 0.022, 0.035], [0, y, 2.59], dark);
-    addBox([1.18, 0.23, 0.10], [0, 0.89, 2.53], trim);
-    addBox([2.22, 0.22, 0.23], [0, 0.49, 2.44], blackPlastic);
-    const emblem = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.035, 20), trim);
-    emblem.rotation.x = Math.PI / 2;
-    emblem.position.set(0, 1.29, 2.60);
-    camper.add(emblem);
-    for (const x of [-0.43, 0.43]) {
-      const wiper = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.024, 0.024), dark);
-      wiper.position.set(x, 1.60, 2.47);
-      wiper.rotation.z = x < 0 ? -0.16 : 0.16;
-      camper.add(wiper);
-    }
-    for (const side of [-1, 1]) {
-      const arm = addBox([0.06, 0.06, 0.48], [side * 1.31, 2.00, 1.96], trim);
-      arm.rotation.y = side * 0.16;
-      addBox([0.16, 0.40, 0.26], [side * 1.46, 2.00, 2.14], dark);
-    }
-
-    // ヘッドライト・ウインカー・ナンバー。
-    for (const x of [-0.72, 0.72]) {
-      addBox([0.50, 0.22, 0.045], [x, 1.23, 2.59], clearLamp);
-      addBox([0.12, 0.12, 0.048], [x + Math.sign(x) * 0.30, 1.23, 2.60], amberLamp);
-    }
-    addBox([0.68, 0.23, 0.045], [0, 0.67, 2.58], dark);
-
-    // サイドグラフィックを控えめに。
-    const stripe1 = addBox([0.04, 0.10, 2.55], [-1.16, 1.56, -0.10], trim);
-    stripe1.rotation.x = 0;
-    const stripe2 = addBox([0.04, 0.07, 1.85], [1.16, 1.72, -0.42], blackPlastic);
-    stripe2.rotation.x = 0;
-
-    // タイヤ・ホイール。
-    const wheelGeometry = new THREE.CylinderGeometry(0.47, 0.47, 0.34, 22);
-    const hubGeometry = new THREE.CylinderGeometry(0.19, 0.19, 0.355, 16);
-    const wheelPositions = [
-      [-1.10, 0.56, 1.45], [1.10, 0.56, 1.45],
-      [-1.10, 0.56, -1.53], [1.10, 0.56, -1.53]
-    ];
-    this.wheels = [];
-    for (const [x, y, z] of wheelPositions) {
-      const wheelGroup = new THREE.Group();
-      wheelGroup.position.set(x, y, z);
-      const tire = new THREE.Mesh(wheelGeometry, dark);
-      tire.rotation.z = Math.PI / 2;
-      tire.castShadow = true;
-      wheelGroup.add(tire);
-      const hub = new THREE.Mesh(hubGeometry, trim);
-      hub.rotation.z = Math.PI / 2;
-      wheelGroup.add(hub);
-      camper.add(wheelGroup);
-      this.wheels.push(wheelGroup);
-    }
-
-    // 後部ランプ。
-    for (const x of [-0.78, 0.78]) {
-      addBox([0.46, 0.11, 0.04], [x, 0.81, -2.57], redLamp);
-      addBox([0.46, 0.075, 0.04], [x, 0.66, -2.57], clearLamp);
-    }
-    addBox([0.62, 0.22, 0.04], [0, 0.61, -2.58], dark);
-
-    this.model = camper;
-    this.bodyPivot.add(camper);
-  }
-
-  update(delta) {
-    if (!this.model || this.finished) return;
 
     this.elapsedTime += delta;
+
+    // 仮想ジョイスティックの状態を更新
+    this.input.update?.();
+
     this.updateSpeed(delta);
+
     this.updateSteering(delta);
 
-    const poseBeforeMove = this.world.getPose(this.progress, this.laneOffset);
-    const moveDirection = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading));
-    const forwardAmount = moveDirection.dot(poseBeforeMove.tangent) * this.speed * delta;
-    const sideAmount = moveDirection.dot(poseBeforeMove.side) * this.speed * delta;
+    this.updatePosition(delta);
 
-    this.progress = THREE.MathUtils.clamp(this.progress + forwardAmount / this.world.length, 0, 1);
-    const nextLaneOffset = this.laneOffset + sideAmount;
-    const limit = this.world.roadHalfWidth - this.dimensions.x * 0.53;
+    this.updateWheelRotation(delta);
 
-    if (nextLaneOffset < -limit || nextLaneOffset > limit) {
-      this.laneOffset = THREE.MathUtils.clamp(nextLaneOffset, -limit, limit);
-      if (!this.wallContact) {
-        this.collisionCount += 1;
-        this.wallContact = true;
-      }
-      // v8の操作感を維持しながら、道路端では減速する。
-      this.speed = THREE.MathUtils.damp(this.speed, 0, 8.5, delta);
-    } else {
-      this.laneOffset = nextLaneOffset;
-      this.wallContact = false;
+    this.updateLights();
+
+    this.checkGoal(delta);
+
+}
+
+
+// ============================================================================
+// 前進・ブレーキ・後退
+// ============================================================================
+
+updateSpeed(delta) {
+
+    const driveInput =
+        this.input.getDriveAxis
+            ? this.input.getDriveAxis()
+            : (
+                this.input.keys.forward
+                    ? 1
+                    : this.input.keys.backward
+                        ? -1
+                        : 0
+            );
+
+    if (driveInput > 0) {
+
+        this.speed +=
+
+            this.acceleration *
+
+            driveInput *
+
+            delta;
+
+    }
+
+    else if (driveInput < 0) {
+
+        // 前進中に後退入力した場合はブレーキ
+        if (this.speed > 0.5) {
+
+            this.speed -=
+
+                this.brakePower *
+
+                Math.abs(driveInput) *
+
+                delta;
+
+        }
+
+        // 十分に減速したら後退
+        else {
+
+            this.speed -=
+
+                this.acceleration *
+
+                0.62 *
+
+                Math.abs(driveInput) *
+
+                delta;
+
+        }
+
+    }
+
+    else {
+
+        this.speed =
+
+            THREE.MathUtils.damp(
+
+                this.speed,
+
+                0,
+
+                this.drag,
+
+                delta
+
+            );
+
+    }
+
+    this.speed =
+
+        THREE.MathUtils.clamp(
+
+            this.speed,
+
+            -this.maxReverse,
+
+            this.maxSpeed
+
+        );
+
+}
+
+
+// ============================================================================
+// 操舵
+// 左入力で車体が左へ向く
+// 右入力で車体が右へ向く
+// 後退時は実車と同様に車体後部が入力方向へ移動
+// ============================================================================
+
+updateSteering(delta) {
+
+    const steeringInput =
+        this.input.getSteeringAxis
+            ? this.input.getSteeringAxis()
+            : (
+                this.input.keys.left
+                    ? -1
+                    : this.input.keys.right
+                        ? 1
+                        : 0
+            );
+
+    this.steer =
+
+        THREE.MathUtils.damp(
+
+            this.steer,
+
+            steeringInput,
+
+            10,
+
+            delta
+
+        );
+
+    const speedRatio =
+
+        THREE.MathUtils.clamp(
+
+            Math.abs(this.speed) /
+
+            this.maxSpeed,
+
+            0,
+
+            1
+
+        );
+
+    // 低速でも最低限ハンドルが効く
+    const steeringPower =
+
+        0.24 +
+
+        speedRatio *
+
+        0.76;
+
+    // 前進と後退で回転方向を反転
+    const driveDirection =
+
+        this.speed >= 0
+
+            ? 1
+
+            : -1;
+
+    const yawSpeed =
+
+        this.steer *
+
+        steeringPower *
+
+        Math.abs(this.speed) *
+
+        0.055 *
+
+        driveDirection;
+
+    // Three.js座標上で
+    // 左入力は反時計回り、右入力は時計回り
+    this.heading -=
+
+        yawSpeed *
+
+        delta;
+
+}
+
+
+// ============================================================================
+// 車両位置の更新
+// 道に沿って自動で曲げず、現在の車体方向へ進む
+// ============================================================================
+
+updatePosition(delta) {
+
+    const currentPose =
+
+        this.world.getPose(
+
+            this.progress,
+
+            this.laneOffset
+
+        );
+
+    const vehicleForward =
+
+        new THREE.Vector3(
+
+            Math.sin(this.heading),
+
+            0,
+
+            Math.cos(this.heading)
+
+        );
+
+    const forwardMovement =
+
+        vehicleForward.dot(
+
+            currentPose.tangent
+
+        ) *
+
+        this.speed *
+
+        delta;
+
+    const lateralMovement =
+
+        vehicleForward.dot(
+
+            currentPose.side
+
+        ) *
+
+        this.speed *
+
+        delta;
+
+    this.progress =
+
+        THREE.MathUtils.clamp(
+
+            this.progress +
+
+            forwardMovement /
+
+            this.world.length,
+
+            0,
+
+            1
+
+        );
+
+    const nextLaneOffset =
+
+        this.laneOffset +
+
+        lateralMovement;
+
+    const roadLimit =
+
+        this.world.roadHalfWidth -
+
+        this.dimensions.x *
+
+        0.53;
+
+    if (
+        nextLaneOffset <
+        -roadLimit ||
+
+        nextLaneOffset >
+        roadLimit
+    ) {
+
+        this.handleRoadBoundary(
+
+            nextLaneOffset,
+
+            roadLimit,
+
+            delta
+
+        );
+
+    }
+
+    else {
+
+        this.laneOffset =
+
+            nextLaneOffset;
+
+        this.wallContact = false;
+
     }
 
     this.placeAtProgress(delta);
 
-    const spin = (this.speed * delta) / 0.47;
-    for (const wheel of this.wheels) wheel.rotation.x += spin;
+}
 
-    if (this.progress >= 0.997) {
-      this.progress = 0.997;
-      this.arrivalSpeed = this.speedKmh;
-      this.speed = 0;
-      this.finished = true;
-      this.input.reset();
-      this.placeAtProgress(delta);
-      this.game.ui?.showFinish(this.getResult());
-    }
-  }
 
-  updateSpeed(delta) {
-    if (this.input.keys.forward) this.speed += this.acceleration * delta;
-    if (this.input.keys.backward) {
-      if (this.speed > 1) this.speed -= this.brakePower * delta;
-      else this.speed -= this.acceleration * 0.62 * delta;
-    }
-    if (this.input.keys.brake) this.speed -= Math.sign(this.speed || 1) * this.brakePower * delta;
-    if (!this.input.keys.forward && !this.input.keys.backward && !this.input.keys.brake) {
-      this.speed = THREE.MathUtils.damp(this.speed, 0, this.drag, delta);
-    }
-    this.speed = THREE.MathUtils.clamp(this.speed, -this.maxReverse, this.maxSpeed);
-  }
+// ============================================================================
+// 道路外へ出ようとした場合
+// 急停止させず、少し滑りながら減速
+// ============================================================================
 
-  updateSteering(delta) {
-    let target = 0;
-    // v8で逆転していた左右入力だけを修正。
-    if (this.input.keys.left) target = 1;
-    if (this.input.keys.right) target = -1;
+handleRoadBoundary(
 
-    this.steer = THREE.MathUtils.damp(this.steer, target, 10, delta);
-    const speedRatio = THREE.MathUtils.clamp(Math.abs(this.speed) / 8, 0, 1);
-    const yawRate = this.steer * Math.abs(this.speed) * (0.032 + speedRatio * 0.020);
-    const reverseDirection = this.speed < 0 ? -1 : 1;
-    this.heading -= yawRate * delta * reverseDirection;
-  }
+    nextLaneOffset,
 
-  placeAtProgress(delta = 0.016, immediate = false) {
-    const pose = this.world.getPose(this.progress, this.laneOffset);
-    this.root.position.copy(pose.position);
-    this.root.position.y += 0.11;
-    this.root.rotation.y = this.heading;
+    roadLimit,
 
-    const leanTarget = -this.steer * 0.018 * Math.min(Math.abs(this.speed) / 12, 1);
-    this.bodyPivot.rotation.z = immediate ? leanTarget : THREE.MathUtils.damp(this.bodyPivot.rotation.z, leanTarget, 4.5, delta);
-    this.bodyPivot.rotation.x = immediate ? 0 : THREE.MathUtils.damp(this.bodyPivot.rotation.x, 0, 5, delta);
+    delta
 
-    this.updateLights();
-  }
+) {
 
-  createLights() {
-    const width = this.dimensions.x * 0.31;
-    const front = this.dimensions.z * 0.49;
-    const rear = -this.dimensions.z * 0.49;
-    const height = 1.18;
+    this.laneOffset =
 
-    for (const x of [-width, width]) {
-      const light = new THREE.SpotLight(0xffefc7, 0, 100, THREE.MathUtils.degToRad(29), 0.52, 1.25);
-      light.position.set(x, height, front);
-      const target = new THREE.Object3D();
-      target.position.set(x * 0.55, -1.15, front + 34);
-      this.bodyPivot.add(light, target);
-      light.target = target;
-      this.headLights.push(light);
+        THREE.MathUtils.clamp(
+
+            nextLaneOffset,
+
+            -roadLimit,
+
+            roadLimit
+
+        );
+
+    if (!this.wallContact) {
+
+        this.collisionCount += 1;
+
+        this.wallContact = true;
+
     }
 
-    for (const x of [-width, width]) {
-      const lamp = TailLampFactory.create(this.tailLampShape, 0.54, 0.16);
-      lamp.position.set(x, 1.10, rear - 0.05);
-      lamp.rotation.y = Math.PI;
-      this.bodyPivot.add(lamp);
-      const glow = new THREE.PointLight(0xff2018, 0, 7, 2);
-      glow.position.copy(lamp.position);
-      this.bodyPivot.add(glow);
-      this.tailLights.push({ lamp, glow });
+    // 強制停止ではなく速度を徐々に落とす
+    this.speed =
+
+        THREE.MathUtils.damp(
+
+            this.speed,
+
+            0,
+
+            3.4,
+
+            delta
+
+        );
+
+    // 壁方向へ押し続けた場合も
+    // わずかに前後移動を残す
+    if (
+        Math.abs(this.speed) < 0.18
+    ) {
+
+        this.speed = 0;
+
     }
 
-    const centerLamp = TailLampFactory.create("bar", 0.36, 0.10);
-    centerLamp.position.set(0, 1.66, rear - 0.04);
-    centerLamp.rotation.y = Math.PI;
-    this.bodyPivot.add(centerLamp);
-    const centerGlow = new THREE.PointLight(0xff2b22, 0, 5, 2);
-    centerGlow.position.copy(centerLamp.position);
-    this.bodyPivot.add(centerGlow);
-    this.tailLights.push({ lamp: centerLamp, glow: centerGlow });
-  }
+}
 
-  setTailLampShape(shape) {
-    if (!["bar", "round", "double"].includes(shape)) return;
-    for (const light of this.headLights) this.bodyPivot.remove(light, light.target);
-    for (const item of this.tailLights) this.bodyPivot.remove(item.lamp, item.glow);
-    this.headLights.length = 0;
-    this.tailLights.length = 0;
-    this.tailLampShape = shape;
-    this.createLights();
-  }
 
-  updateLights() {
-    const area = this.world.getArea(this.progress);
-    const dark = area.id >= 2;
-    const braking = this.input.keys.brake || this.input.keys.backward;
-    for (const light of this.headLights) light.intensity = dark ? (area.id === 3 ? 68 : 50) : 0;
-    for (const item of this.tailLights) {
-      item.lamp.visible = dark || braking;
-      item.glow.intensity = braking ? 3.0 : dark ? 0.9 : 0;
+// ============================================================================
+// 車体とタイヤの描画位置
+// ============================================================================
+
+placeAtProgress(
+
+    delta = 0.016,
+
+    immediate = false
+
+) {
+
+    const pose =
+
+        this.world.getPose(
+
+            this.progress,
+
+            this.laneOffset
+
+        );
+
+    this.root.position.copy(
+
+        pose.position
+
+    );
+
+    this.root.position.y +=
+
+        0.11;
+
+    this.root.rotation.y =
+
+        this.heading;
+
+    const speedRatio =
+
+        THREE.MathUtils.clamp(
+
+            Math.abs(this.speed) / 12,
+
+            0,
+
+            1
+
+        );
+
+    const leanTarget =
+
+        -this.steer *
+
+        speedRatio *
+
+        0.018;
+
+    this.bodyPivot.rotation.z =
+
+        immediate
+
+            ? leanTarget
+
+            : THREE.MathUtils.damp(
+
+                this.bodyPivot.rotation.z,
+
+                leanTarget,
+
+                4.5,
+
+                delta
+
+            );
+
+    this.bodyPivot.rotation.x =
+
+        immediate
+
+            ? 0
+
+            : THREE.MathUtils.damp(
+
+                this.bodyPivot.rotation.x,
+
+                0,
+
+                5,
+
+                delta
+
+            );
+
+}
+
+
+// ============================================================================
+// タイヤ回転
+// ============================================================================
+
+updateWheelRotation(delta) {
+
+    if (!this.wheels) return;
+
+    const rotationAmount =
+
+        this.speed *
+
+        delta /
+
+        0.47;
+
+    this.wheels.forEach(
+
+        (
+
+            wheel,
+
+            index
+
+        ) => {
+
+            wheel.rotation.x +=
+
+                rotationAmount;
+
+            // 前輪だけ操舵角を表示
+            if (index < 2) {
+
+                wheel.rotation.y =
+
+                    -this.steer *
+
+                    0.42;
+
+            }
+
+            else {
+
+                wheel.rotation.y = 0;
+
+            }
+
+        }
+
+    );
+
+}
+
+
+// ============================================================================
+// ゴール判定
+// ============================================================================
+
+checkGoal(delta) {
+
+    if (
+        this.progress <
+        0.997
+    ) {
+
+        return;
+
     }
-  }
 
-  getResult() {
-    const collisions = this.collisionCount;
-    const seconds = this.elapsedTime;
-    const titles = [];
+    this.progress = 0.997;
 
-    if (collisions === 0 && seconds <= 120) titles.push("パーフェクトヒューマン");
-    if (seconds <= 120) titles.push("スピードキング");
-    if (collisions >= 20) titles.push("期待のルーキー");
-    else if (collisions >= 10) titles.push("ベテランドライバー");
-    else if (collisions >= 1) titles.push("キャンピングカーの達人");
-    if (titles.length === 0) titles.push("ロードトリップ完走者");
+    this.arrivalSpeed =
+
+        this.speedKmh;
+
+    this.speed = 0;
+
+    this.finished = true;
+
+    this.input.reset();
+
+    this.placeAtProgress(
+
+        delta
+
+    );
+
+    this.game.ui?.showFinish(
+
+        this.getResult()
+
+    );
+
+}
+// ============================================================================
+// vehicle/Vehicle.js
+// Part 2
+// 結果データ・速度表示・ライト・リセット
+// ============================================================================
+
+get speedKmh() {
+
+    return Math.abs(this.speed) * 3.6;
+
+}
+
+
+// ============================================================================
+// 結果画面用データ
+// ============================================================================
+
+getResult() {
+
+    const totalSeconds =
+        Math.max(
+            0,
+            this.elapsedTime
+        );
+
+    const minutes =
+        Math.floor(
+            totalSeconds / 60
+        );
+
+    const seconds =
+        Math.floor(
+            totalSeconds % 60
+        );
+
+    const milliseconds =
+        Math.floor(
+            (
+                totalSeconds -
+                Math.floor(totalSeconds)
+            ) * 100
+        );
+
+    const timeText =
+        `${String(minutes).padStart(2, "0")}:` +
+        `${String(seconds).padStart(2, "0")}.` +
+        `${String(milliseconds).padStart(2, "0")}`;
 
     return {
-      title: titles[0],
-      extraTitles: titles.slice(1),
-      collisions,
-      seconds,
-      arrivalSpeed: this.arrivalSpeed
+
+        title:
+            "GOAL",
+
+        arrivalTime:
+            timeText,
+
+        collisionCount:
+            this.collisionCount,
+
+        arrivalSpeed:
+            Math.round(
+                Math.abs(
+                    this.arrivalSpeed
+                )
+            )
+
     };
-  }
 
-  reset() {
-    this.input.reset();
-    this.progress = 0.006;
-    this.laneOffset = 0;
-    this.speed = 0;
-    this.steer = 0;
-    const startPose = this.world.getPose(this.progress, 0);
-    this.heading = Math.atan2(startPose.tangent.x, startPose.tangent.z);
-    this.finished = false;
-    this.elapsedTime = 0;
-    this.collisionCount = 0;
-    this.arrivalSpeed = 0;
-    this.wallContact = false;
-    this.placeAtProgress(1, true);
-  }
-
-  get speedKmh() {
-    return Math.round(Math.abs(this.speed) * 3.6);
-  }
 }
+
+
+// ============================================================================
+// ヘッドライト・テールライト
+// ライト数を増やし過ぎず、左右で共有する
+// ============================================================================
+
+createVehicleLights() {
+
+    this.vehicleLights =
+        new THREE.Group();
+
+    this.root.add(
+        this.vehicleLights
+    );
+
+    const headGeometry =
+        new THREE.CircleGeometry(
+            0.13,
+            12
+        );
+
+    const tailGeometry =
+        new THREE.CircleGeometry(
+            0.11,
+            12
+        );
+
+    const headMaterial =
+        new THREE.MeshBasicMaterial({
+
+            color:
+                0xfff4cf,
+
+            transparent:
+                true,
+
+            opacity:
+                0.95,
+
+            side:
+                THREE.DoubleSide
+
+        });
+
+    const tailMaterial =
+        new THREE.MeshBasicMaterial({
+
+            color:
+                0xff3028,
+
+            transparent:
+                true,
+
+            opacity:
+                0.9,
+
+            side:
+                THREE.DoubleSide
+
+        });
+
+    this.headLampMeshes = [];
+
+    this.tailLampMeshes = [];
+
+    const headPositions = [
+
+        new THREE.Vector3(
+            -0.58,
+            0.62,
+            1.72
+        ),
+
+        new THREE.Vector3(
+            0.58,
+            0.62,
+            1.72
+        )
+
+    ];
+
+    const tailPositions = [
+
+        new THREE.Vector3(
+            -0.58,
+            0.61,
+            -1.72
+        ),
+
+        new THREE.Vector3(
+            0.58,
+            0.61,
+            -1.72
+        )
+
+    ];
+
+    headPositions.forEach(
+
+        position => {
+
+            const lamp =
+                new THREE.Mesh(
+
+                    headGeometry,
+
+                    headMaterial
+
+                );
+
+            lamp.position.copy(
+                position
+            );
+
+            lamp.rotation.y =
+                Math.PI;
+
+            this.vehicleLights.add(
+                lamp
+            );
+
+            this.headLampMeshes.push(
+                lamp
+            );
+
+        }
+
+    );
+
+    tailPositions.forEach(
+
+        position => {
+
+            const lamp =
+                new THREE.Mesh(
+
+                    tailGeometry,
+
+                    tailMaterial
+
+                );
+
+            lamp.position.copy(
+                position
+            );
+
+            this.vehicleLights.add(
+                lamp
+            );
+
+            this.tailLampMeshes.push(
+                lamp
+            );
+
+        }
+
+    );
+
+    // 実ライトは左右1個ずつではなく
+    // 前方1個だけにして負荷を抑える
+    this.headLight =
+        new THREE.SpotLight(
+
+            0xfff2cf,
+
+            0,
+
+            42,
+
+            THREE.MathUtils.degToRad(
+                34
+            ),
+
+            0.55,
+
+            1.5
+
+        );
+
+    this.headLight.position.set(
+
+        0,
+
+        0.72,
+
+        1.45
+
+    );
+
+    this.headLightTarget =
+        new THREE.Object3D();
+
+    this.headLightTarget.position.set(
+
+        0,
+
+        0.2,
+
+        16
+
+    );
+
+    this.vehicleLights.add(
+        this.headLight
+    );
+
+    this.vehicleLights.add(
+        this.headLightTarget
+    );
+
+    this.headLight.target =
+        this.headLightTarget;
+
+}
+
+
+// ============================================================================
+// 車両ライト更新
+// ============================================================================
+
+updateLights() {
+
+    if (
+        !this.vehicleLights
+    ) {
+
+        return;
+
+    }
+
+    const headOn =
+        Boolean(
+            this.headLightsOn
+        );
+
+    const tailOn =
+        Boolean(
+            this.tailLightsOn
+        );
+
+    this.headLampMeshes.forEach(
+
+        lamp => {
+
+            lamp.visible =
+                headOn;
+
+        }
+
+    );
+
+    this.tailLampMeshes.forEach(
+
+        lamp => {
+
+            lamp.visible =
+                tailOn;
+
+        }
+
+    );
+
+    this.headLight.intensity =
+
+        headOn
+
+            ? 3.2
+
+            : 0;
+
+}
+
+
+// ============================================================================
+// 入力リセット
+// ============================================================================
+
+resetInput() {
+
+    if (
+        this.input.resetVirtualJoystick
+    ) {
+
+        this.input.resetVirtualJoystick();
+
+    }
+
+    if (
+        this.input.reset
+    ) {
+
+        this.input.reset();
+
+    }
+
+}
+
+
+// ============================================================================
+// 車両状態リセット
+// ============================================================================
+
+reset() {
+
+    this.progress =
+        0;
+
+    this.laneOffset =
+        0;
+
+    this.speed =
+        0;
+
+    this.steer =
+        0;
+
+    this.heading =
+        this.world.getPose(
+            0,
+            0
+        ).heading;
+
+    this.elapsedTime =
+        0;
+
+    this.collisionCount =
+        0;
+
+    this.arrivalSpeed =
+        0;
+
+    this.finished =
+        false;
+
+    this.wallContact =
+        false;
+
+    this.headLightsOn =
+        false;
+
+    this.tailLightsOn =
+        false;
+
+    this.resetInput();
+
+    this.placeAtProgress(
+
+        0.016,
+
+        true
+
+    );
+
+}
+
+
+// ============================================================================
+// constructor() 内で初期化する値
+// ============================================================================
+
+this.elapsedTime = 0;
+
+this.collisionCount = 0;
+
+this.arrivalSpeed = 0;
+
+this.finished = false;
+
+this.wallContact = false;
+
+this.headLightsOn = false;
+
+this.tailLightsOn = false;
+
+this.maxSpeed = 35;
+
+this.maxReverse = 12;
+
+this.acceleration = 18;
+
+this.brakePower = 30;
+
+this.drag = 8;
+
+this.steer = 0;
+
+this.createVehicleLights();
