@@ -1,97 +1,225 @@
+// ============================================================================
+// vehicle/CameraController.js
+// Part 1
+// カメラ改善版
+// ・車の揺れに追従しない
+// ・カクつき解消
+// ・右スティック対応準備
+// ============================================================================
+
 import * as THREE from "three";
 
-export class CameraController {
-  constructor(game, vehicle) {
-    this.game = game;
-    this.camera = game.camera;
-    this.vehicle = vehicle;
-    this.yawOffset = 0;
-    this.pitch = 0.28;
-    this.distance = 16;
-    this.dragging = false;
-    this.last = { x: 0, y: 0 };
-    this.position = new THREE.Vector3();
-    this.target = new THREE.Vector3();
-    this.smoothedAnchor = new THREE.Vector3();
-    this.smoothedTarget = new THREE.Vector3();
-    this.smoothedRoadYaw = 0;
+export default class CameraController {
 
-    const el = game.renderer.domElement;
-    el.addEventListener("pointerdown", (e) => {
-      this.dragging = true;
-      this.last = { x: e.clientX, y: e.clientY };
-      el.setPointerCapture(e.pointerId);
-    });
-    el.addEventListener("pointermove", (e) => {
-      if (!this.dragging) return;
-      this.yawOffset -= (e.clientX - this.last.x) * 0.0055;
-      this.pitch = THREE.MathUtils.clamp(this.pitch + (e.clientY - this.last.y) * 0.0035, 0.06, 0.78);
-      this.last = { x: e.clientX, y: e.clientY };
-    });
-    el.addEventListener("pointerup", () => { this.dragging = false; });
-    el.addEventListener("pointercancel", () => { this.dragging = false; });
-    el.addEventListener("wheel", (e) => {
-      e.preventDefault();
-      this.distance = THREE.MathUtils.clamp(this.distance + e.deltaY * 0.011, 9, 28);
-    }, { passive: false });
-    addEventListener("keydown", (e) => { if (e.code === "KeyC") this.reset(); });
+    constructor(camera, vehicle) {
 
-    this.reset(true);
-  }
+        this.camera = camera;
 
-  update(delta) {
-    const pose = this.vehicle.world.getPose(this.vehicle.progress, this.vehicle.laneOffset);
-    const vehicleYaw = this.vehicle.root.rotation.y;
-    this.smoothedRoadYaw = this.dampAngle(this.smoothedRoadYaw, vehicleYaw, 2.8, delta);
+        this.vehicle = vehicle;
 
-    const anchorTarget = this.vehicle.root.position.clone();
-    anchorTarget.y += 1.45;
-    const followK = 1 - Math.exp(-delta * 4.0);
-    this.smoothedAnchor.lerp(anchorTarget, followK);
+        this.distance = 8.5;
 
-    const yaw = this.smoothedRoadYaw + Math.PI + this.yawOffset;
-    const horizontal = Math.cos(this.pitch) * this.distance;
-    const desired = this.smoothedAnchor.clone().add(new THREE.Vector3(
-      Math.sin(yaw) * horizontal,
-      Math.sin(this.pitch) * this.distance + 1.9,
-      Math.cos(yaw) * horizontal
-    ));
+        this.height = 3.2;
 
-    const cameraK = 1 - Math.exp(-delta * 4.2);
-    this.position.lerp(desired, cameraK);
-    this.camera.position.copy(this.position);
+        this.lookHeight = 1.2;
 
-    const lookDirection = new THREE.Vector3(
-      Math.sin(this.smoothedRoadYaw),
-      0,
-      Math.cos(this.smoothedRoadYaw)
-    );
-    const lookAhead = lookDirection.multiplyScalar(this.vehicle.finished ? 0 : 4.0);
-    const desiredTarget = this.smoothedAnchor.clone().add(lookAhead);
-    desiredTarget.y += 0.50;
-    this.smoothedTarget.lerp(desiredTarget, 1 - Math.exp(-delta * 5.0));
-    this.camera.up.set(0, 1, 0);
-    this.camera.lookAt(this.smoothedTarget);
-  }
+        this.smoothPosition = new THREE.Vector3();
 
-  dampAngle(current, target, lambda, delta) {
-    const twoPi = Math.PI * 2;
-    let diff = (target - current + Math.PI) % twoPi - Math.PI;
-    if (diff < -Math.PI) diff += twoPi;
-    return current + diff * (1 - Math.exp(-lambda * delta));
-  }
+        this.smoothLook = new THREE.Vector3();
 
-  reset(immediate = false) {
-    this.yawOffset = 0;
-    this.pitch = 0.28;
-    this.distance = 16;
-    const yaw = this.vehicle.root.rotation.y;
-    this.smoothedRoadYaw = yaw;
-    this.smoothedAnchor.copy(this.vehicle.root.position).add(new THREE.Vector3(0, 1.45, 0));
-    this.smoothedTarget.copy(this.smoothedAnchor);
-    if (immediate) {
-      this.position.copy(this.smoothedAnchor).add(new THREE.Vector3(-Math.sin(yaw) * 16, 7.4, -Math.cos(yaw) * 16));
-      this.camera.position.copy(this.position);
+        this.yaw = 0;
+
+        this.pitch = 0.18;
+
+        this.freeLook = false;
+
+        this.rotateSpeed = 2.2;
+
+        this.minPitch = -0.18;
+
+        this.maxPitch = 0.52;
+
+        this.initialized = false;
+
     }
-  }
+
+    //=========================================================================
+    // 毎フレーム
+    //=========================================================================
+
+    update(delta) {
+
+        if (!this.vehicle.root) return;
+
+        //------------------------------------
+        // 車体位置
+        //------------------------------------
+
+        const base =
+
+            this.vehicle.root.position.clone();
+
+        //------------------------------------
+        // 車体の向きだけ使う
+        // サスペンションの揺れは無視
+        //------------------------------------
+
+        if (!this.freeLook) {
+
+            this.yaw =
+
+                this.vehicle.heading;
+
+        }
+
+        //------------------------------------
+        // カメラ位置
+        //------------------------------------
+
+        const offset =
+
+            new THREE.Vector3(
+
+                Math.sin(this.yaw) * this.distance,
+
+                this.height,
+
+                Math.cos(this.yaw) * this.distance
+
+            );
+
+        offset.multiplyScalar(-1);
+
+        const targetPosition =
+
+            base.clone().add(offset);
+
+        //------------------------------------
+        // 注視点
+        //------------------------------------
+
+        const targetLook =
+
+            base.clone();
+
+        targetLook.y +=
+
+            this.lookHeight;
+
+        //------------------------------------
+        // 初回
+        //------------------------------------
+
+        if (!this.initialized) {
+
+            this.initialized = true;
+
+            this.smoothPosition.copy(
+
+                targetPosition
+
+            );
+
+            this.smoothLook.copy(
+
+                targetLook
+
+            );
+
+        }
+
+        //------------------------------------
+        // スムージング
+        //------------------------------------
+
+        this.smoothPosition.lerp(
+
+            targetPosition,
+
+            1 -
+
+            Math.exp(
+
+                -delta * 7
+
+            )
+
+        );
+
+        this.smoothLook.lerp(
+
+            targetLook,
+
+            1 -
+
+            Math.exp(
+
+                -delta * 10
+
+            )
+
+        );
+
+        //------------------------------------
+        // 適用
+        //------------------------------------
+
+        this.camera.position.copy(
+
+            this.smoothPosition
+
+        );
+
+        this.camera.lookAt(
+
+            this.smoothLook
+
+        );
+
+    }
+
+    //=========================================================================
+    // 右スティック用
+    //=========================================================================
+
+    rotate(dx, dy) {
+
+        this.freeLook = true;
+
+        this.yaw -=
+
+            dx *
+
+            this.rotateSpeed;
+
+        this.pitch +=
+
+            dy *
+
+            this.rotateSpeed;
+
+        this.pitch =
+
+            THREE.MathUtils.clamp(
+
+                this.pitch,
+
+                this.minPitch,
+
+                this.maxPitch
+
+            );
+
+    }
+
+    //=========================================================================
+    // 車の後ろへ戻す
+    //=========================================================================
+
+    resetBehindVehicle() {
+
+        this.freeLook = false;
+
+    }
+
 }
