@@ -787,3 +787,322 @@ createPoliceStation(){
     );
 
 }
+// ============================================================================
+// world/TownBuilder.js
+// V11
+// Part 3
+// ビル街（高さ・幅・色・配置をランダム化）
+// ============================================================================
+
+//=========================================================================
+// ビル街
+//=========================================================================
+
+createBuildings(){
+
+    const colors=[
+
+        0xd9dde2,
+        0xc9d2db,
+        0xbfc6cd,
+        0xe4e4e4,
+        0xb4bcc3,
+        0xd2cdc7
+
+    ];
+
+    let progress=0.26;
+
+    for(
+
+        let i=0;
+
+        i<42;
+
+        i++
+
+    ){
+
+        progress+=
+
+            0.0038+
+
+            Math.random()*.002;
+
+        const side=
+
+            Math.random()>.5
+
+            ?18+
+
+            Math.random()*5
+
+            :-(18+
+
+            Math.random()*5);
+
+        const pose=
+
+            this.world.getPose(
+
+                progress,
+
+                side
+
+            );
+
+        const g=
+
+            new THREE.Group();
+
+        //--------------------------------
+        // 本体
+        //--------------------------------
+
+        const width=
+
+            3+
+
+            Math.random()*4;
+
+        const depth=
+
+            3+
+
+            Math.random()*5;
+
+        const height=
+
+            6+
+
+            Math.random()*20;
+
+        const body=
+
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+
+                    width,
+
+                    height,
+
+                    depth
+
+                ),
+
+                new THREE.MeshStandardMaterial({
+
+                    color:
+
+                    colors[
+
+                        Math.floor(
+
+                            Math.random()*
+
+                            colors.length
+
+                        )
+
+                    ]
+
+                })
+
+            );
+
+        body.position.y=
+
+            height*.5;
+
+        body.castShadow=true;
+
+        body.receiveShadow=true;
+
+        g.add(body);
+
+        //--------------------------------
+        // 窓
+        //--------------------------------
+
+        const winMat=
+
+            new THREE.MeshBasicMaterial({
+
+                color:0x9fd8ff
+
+            });
+
+        const rows=
+
+            Math.floor(
+
+                height/2
+
+            );
+
+        const cols=
+
+            Math.max(
+
+                2,
+
+                Math.floor(
+
+                    width
+
+                )
+
+            );
+
+        for(
+
+            let y=0;
+
+            y<rows;
+
+            y++
+
+        ){
+
+            for(
+
+                let x=0;
+
+                x<cols;
+
+                x++
+
+            ){
+
+                const win=
+
+                    new THREE.Mesh(
+
+                        new THREE.PlaneGeometry(
+
+                            .34,
+
+                            .34
+
+                        ),
+
+                        winMat
+
+                    );
+
+                win.position.set(
+
+                    -width*.35+
+
+                    x*
+
+                    (
+
+                        width*.7/
+
+                        (cols-1)
+
+                    ),
+
+                    1.1+
+
+                    y*1.35,
+
+                    depth*.5+
+
+                    .02
+
+                );
+
+                g.add(
+
+                    win
+
+                );
+
+            }
+
+        }
+
+        //--------------------------------
+        // 屋上設備
+        //--------------------------------
+
+        if(
+
+            Math.random()>
+
+            .45
+
+        ){
+
+            const box=
+
+                new THREE.Mesh(
+
+                    new THREE.BoxGeometry(
+
+                        width*.35,
+
+                        .7,
+
+                        depth*.3
+
+                    ),
+
+                    new THREE.MeshStandardMaterial({
+
+                        color:0x777777
+
+                    })
+
+                );
+
+            box.position.y=
+
+                height+
+
+                .35;
+
+            g.add(
+
+                box
+
+            );
+
+        }
+
+        //--------------------------------
+        // 配置
+        //--------------------------------
+
+        g.position.copy(
+
+            pose.position
+
+        );
+
+        g.rotation.y=
+
+            pose.heading+
+
+            (
+
+                side>0
+
+                ?0
+
+                :Math.PI
+
+            );
+
+        this.group.add(
+
+            g
+
+        );
+
+    }
+
+}
