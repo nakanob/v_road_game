@@ -1,55 +1,118 @@
+// ============================================================================
+// index.html
+// Part 1
+// V11 最終版
+// ============================================================================
+
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Road Trip Drive</title>
-  <link rel="stylesheet" href="./style.css">
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.179/examples/jsm/"
-    }
-  }
-  </script>
-</head>
-<body>
-  <div id="game"></div>
-  <div id="loading"><div class="loading-title">ROAD TRIP</div><div class="loading-bar"><span></span></div><div class="loading-text">車両とコースを準備中...</div></div>
-  <div id="hud">
-    <div class="area-row"><span id="area-name">街</span><span id="time-name">朝</span></div>
-    <div class="progress"><span id="progress-bar"></span></div>
-    <div class="checkpoint" id="checkpoint-text">START</div>
-  </div>
-  <div id="speed"><strong id="speed-value">0</strong><span>km/h</span></div>
-  <div id="help">W / ↑ 加速　S / ↓ ブレーキ・後退　A D / ← → 操舵<br>ドラッグ：カメラ　ホイール：ズーム　C：カメラ初期化<br>ゴール後もカメラ操作できます</div>
 
-  <div id="virtual-pad" aria-label="スマートフォン操作">
-    <div class="steer-pad">
-      <button type="button" data-control="left" aria-label="左">←</button>
-      <button type="button" data-control="right" aria-label="右">→</button>
-    </div>
-    <div class="drive-pad">
-      <button type="button" data-control="forward" aria-label="加速">↑</button>
-      <button type="button" data-control="backward" aria-label="ブレーキと後退">↓</button>
-    </div>
-  </div>
-  <div id="finish" hidden>
-    <div class="finish-card">
-      <p>ROAD TRIP COMPLETE</p>
-      <h1>キャンプ場に到着しました</h1>
-      <button id="reset-button" type="button">もう一度走る</button>
-    </div>
-  </div>
-  <script>
-    window.__roadTripWatchdog = setTimeout(function () {
-      var loading = document.getElementById("loading");
-      if (!loading) return;
-      var text = loading.querySelector(".loading-text");
-      if (text) text.textContent = "読み込みに失敗しました。ファイル構成または通信状態を確認してください。";
-    }, 15000);
-  </script>
-  <script type="module" src="./main.js?v=8"></script>
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1.0,user-scalable=no">
+
+<title>VANTECH Adventure Drive</title>
+
+<style>
+
+html,
+body{
+
+margin:0;
+overflow:hidden;
+background:#000;
+touch-action:none;
+font-family:
+Arial,
+sans-serif;
+
+}
+
+canvas{
+
+display:block;
+
+}
+
+.loading{
+
+position:fixed;
+
+inset:0;
+
+display:flex;
+
+flex-direction:column;
+
+justify-content:center;
+
+align-items:center;
+
+background:#111;
+
+color:#fff;
+
+z-index:99999;
+
+}
+
+.loading h1{
+
+font-size:28px;
+
+margin-bottom:15px;
+
+}
+
+.loading p{
+
+font-size:18px;
+
+opacity:.8;
+
+}
+
+#resultScreen{
+
+backdrop-filter:blur(12px);
+
+}
+
+button{
+
+transition:.2s;
+
+}
+
+button:hover{
+
+transform:scale(1.04);
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<script type="importmap">
+{
+    "imports": {
+        "three":"https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js"
+    }
+}
+</script>
+
+<script
+type="module"
+src="./main.js">
+</script>
+
 </body>
+
 </html>
