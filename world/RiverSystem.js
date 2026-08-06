@@ -1,13 +1,14 @@
 // ============================================================================
 // world/RiverSystem.js
-// Part 1
-// 本物の川システム
 // V11
+// Part 1
+// 画像イメージ版
+// 「ちゃんと川がある」River
 // ============================================================================
 
 import * as THREE from "three";
 
-export default class RiverSystem {
+export default class RiverSystem{
 
     constructor(scene){
 
@@ -15,17 +16,14 @@ export default class RiverSystem {
 
         this.group = new THREE.Group();
 
-        this.water = null;
-
-        this.clock = 0;
+        this.time = 0;
 
     }
 
     //=========================================================================
     // 作成
     //=========================================================================
-
-    build(center,length=220){
+    build(center,length=230){
 
         //--------------------------------
         // 川底
@@ -37,17 +35,17 @@ export default class RiverSystem {
 
                 new THREE.BoxGeometry(
 
-                    24,
+                    length,
 
-                    2,
+                    1.2,
 
-                    length
+                    34
 
                 ),
 
                 new THREE.MeshStandardMaterial({
 
-                    color:0x6d5d43,
+                    color:0x78684e,
 
                     roughness:1
 
@@ -55,14 +53,18 @@ export default class RiverSystem {
 
             );
 
-        bottom.position.y=-2.4;
+        bottom.position.y =
 
-        bottom.receiveShadow=true;
+            -3.2;
 
-        this.group.add(bottom);
+        this.group.add(
+
+            bottom
+
+        );
 
         //--------------------------------
-        // 水
+        // 水面
         //--------------------------------
 
         this.water =
@@ -71,41 +73,39 @@ export default class RiverSystem {
 
                 new THREE.PlaneGeometry(
 
-                    18,
-
                     length,
+
+                    28,
 
                     120,
 
-                    120
+                    18
 
                 ),
 
                 new THREE.MeshPhysicalMaterial({
 
-                    color:0x58acd7,
+                    color:0x3d84d6,
 
                     transparent:true,
 
-                    opacity:.93,
+                    opacity:.88,
+
+                    transmission:.65,
 
                     roughness:.08,
 
-                    metalness:.05,
-
-                    clearcoat:1,
-
-                    side:THREE.DoubleSide
+                    metalness:.08
 
                 })
 
             );
 
-        this.water.rotation.x=
+        this.water.rotation.x =
 
             -Math.PI/2;
 
-        this.water.position.y=
+        this.water.position.y =
 
             -.45;
 
@@ -116,133 +116,121 @@ export default class RiverSystem {
         );
 
         //--------------------------------
-        // 左右土手
+        // 左岸
         //--------------------------------
 
-        const bankMat=
+        const bankLeft =
 
-            new THREE.MeshStandardMaterial({
+            new THREE.Mesh(
 
-                color:0x6e9850,
+                new THREE.BoxGeometry(
 
-                roughness:1
+                    length,
 
-            });
+                    3,
+
+                    5
+
+                ),
+
+                new THREE.MeshStandardMaterial({
+
+                    color:0x6b8d47
+
+                })
+
+            );
+
+        bankLeft.position.set(
+
+            0,
+
+            -.4,
+
+            -16.5
+
+        );
+
+        this.group.add(
+
+            bankLeft
+
+        );
+
+        //--------------------------------
+        // 右岸
+        //--------------------------------
+
+        const bankRight =
+
+            bankLeft.clone();
+
+        bankRight.position.z =
+
+            16.5;
+
+        this.group.add(
+
+            bankRight
+
+        );
+
+        //--------------------------------
+        // 岸の斜面
+        //--------------------------------
 
         [
 
-            -15,
+            -13.5,
 
-            15
+            13.5
 
-        ].forEach(x=>{
+        ].forEach(z=>{
 
-            const bank=
+            const slope=
 
                 new THREE.Mesh(
 
                     new THREE.BoxGeometry(
 
-                        10,
+                        length,
 
                         2,
 
-                        length
+                        4
 
                     ),
 
-                    bankMat
+                    new THREE.MeshStandardMaterial({
+
+                        color:0x7ea05a
+
+                    })
 
                 );
 
-            bank.position.set(
+            slope.rotation.x=
 
-                x,
+                (z<0?1:-1)*0.23;
 
-                -.9,
+            slope.position.set(
 
-                0
+                0,
+
+                .1,
+
+                z
 
             );
 
-            bank.receiveShadow=true;
-
             this.group.add(
 
-                bank
+                slope
 
             );
 
         });
 
-        //--------------------------------
-        // 河原
-        //--------------------------------
-
-        const stoneMat=
-
-            new THREE.MeshStandardMaterial({
-
-                color:0x8c857d
-
-            });
-
-        for(
-
-            let i=0;
-
-            i<70;
-
-            i++
-
-        ){
-
-            const stone=
-
-                new THREE.Mesh(
-
-                    new THREE.DodecahedronGeometry(
-
-                        .25+
-
-                        Math.random()*.45
-
-                    ),
-
-                    stoneMat
-
-                );
-
-            stone.position.set(
-
-                (Math.random()-.5)*16,
-
-                -.55,
-
-                (Math.random()-.5)*length
-
-            );
-
-            stone.rotation.set(
-
-                Math.random(),
-
-                Math.random(),
-
-                Math.random()
-
-            );
-
-            this.group.add(
-
-                stone
-
-            );
-
-        }
-
-        //--------------------------------
-        // 配置
         //--------------------------------
 
         this.group.position.copy(
@@ -262,12 +250,9 @@ export default class RiverSystem {
     //=========================================================================
     // 水流
     //=========================================================================
-
     update(delta){
 
-        if(!this.water) return;
-
-        this.clock+=delta;
+        this.time += delta;
 
         const pos=
 
@@ -287,25 +272,21 @@ export default class RiverSystem {
 
                 pos.getX(i);
 
-            const z=
-
-                pos.getY(i);
-
-            const wave=
+            const y=
 
                 Math.sin(
 
-                    z*.18+
+                    x*.06+
 
-                    this.clock*1.8
+                    this.time*2.2
 
                 )*.08+
 
                 Math.cos(
 
-                    x*.22+
+                    x*.025+
 
-                    this.clock
+                    this.time
 
                 )*.04;
 
@@ -313,7 +294,7 @@ export default class RiverSystem {
 
                 i,
 
-                wave
+                y
 
             );
 
