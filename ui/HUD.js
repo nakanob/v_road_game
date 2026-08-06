@@ -165,3 +165,184 @@ z-index:9998;
     }
 
 }
+
+// ============================================================================
+// ui/HUD.js
+// Part 2
+// V11
+// ゴール演出・称号表示・リザルト呼び出し
+// ============================================================================
+
+//=========================================================================
+// ゴール
+//=========================================================================
+
+showGoal(){
+
+    this.goal = document.createElement("div");
+
+    this.goal.style.cssText=`
+
+position:fixed;
+left:50%;
+top:45%;
+transform:translate(-50%,-50%);
+padding:30px 60px;
+background:rgba(0,0,0,.65);
+color:white;
+font-size:46px;
+border-radius:20px;
+opacity:0;
+transition:.8s;
+z-index:99999;
+pointer-events:none;
+
+`;
+
+    this.goal.innerHTML=`
+
+<div style="font-size:52px;font-weight:bold;">
+GOAL！
+</div>
+
+<div style="margin-top:18px;font-size:24px;">
+キャンプ場に到着しました
+</div>
+
+`;
+
+    document.body.appendChild(
+
+        this.goal
+
+    );
+
+    requestAnimationFrame(()=>{
+
+        this.goal.style.opacity=1;
+
+    });
+
+}
+
+//=========================================================================
+// ゴール終了
+//=========================================================================
+
+hideGoal(){
+
+    if(!this.goal) return;
+
+    this.goal.style.opacity=0;
+
+    setTimeout(()=>{
+
+        this.goal.remove();
+
+        this.goal=null;
+
+    },700);
+
+}
+
+//=========================================================================
+// リザルト
+//=========================================================================
+
+showResult(vehicle){
+
+    if(!this.resultScreen){
+
+        return;
+
+    }
+
+    this.hideGoal();
+
+    this.resultScreen.show(
+
+        vehicle
+
+    );
+
+}
+
+//=========================================================================
+// セット
+//=========================================================================
+
+setResultScreen(result){
+
+    this.resultScreen=result;
+
+}
+
+//=========================================================================
+// リセット
+//=========================================================================
+
+hideResult(){
+
+    this.hideGoal();
+
+    this.resultScreen?.hide();
+
+}
+
+//=========================================================================
+// update()最後へ追加
+//=========================================================================
+
+if(
+
+    this.game.vehicle.goal &&
+
+    !this.goalShown
+
+){
+
+    this.goalShown=true;
+
+    this.showGoal();
+
+    setTimeout(()=>{
+
+        this.showResult(
+
+            this.game.vehicle
+
+        );
+
+    },2200);
+
+}
+
+if(
+
+    !this.game.vehicle.goal
+
+){
+
+    this.goalShown=false;
+
+}
+
+//=========================================================================
+// エリア名更新
+//=========================================================================
+
+if(
+
+    this.currentArea!==
+
+    this.game.environment.currentArea
+
+){
+
+    this.changeArea(
+
+        this.game.environment.currentArea
+
+    );
+
+}
