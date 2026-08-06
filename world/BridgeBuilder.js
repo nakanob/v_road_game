@@ -1,13 +1,13 @@
 // ============================================================================
 // world/BridgeBuilder.js
-// Part 1
 // V11
+// Part 1
 // 川を跨ぐ橋（RiverSystem専用）
 // ============================================================================
 
 import * as THREE from "three";
 
-export default class BridgeBuilder {
+export default class BridgeBuilder{
 
     constructor(scene){
 
@@ -20,11 +20,10 @@ export default class BridgeBuilder {
     //=========================================================================
     // 作成
     //=========================================================================
-
     build(center){
 
         //--------------------------------
-        // 橋桁
+        // 橋面
         //--------------------------------
 
         const deck =
@@ -33,75 +32,33 @@ export default class BridgeBuilder {
 
                 new THREE.BoxGeometry(
 
-                    10,
+                    32,
 
-                    .45,
+                    .55,
 
-                    34
+                    8.4
 
                 ),
 
                 new THREE.MeshStandardMaterial({
 
-                    color:0x777777,
+                    color:0x8b8b8b,
 
-                    roughness:.85
+                    roughness:.9
 
                 })
 
             );
 
-        deck.receiveShadow=true;
+        deck.position.y =
 
-        deck.castShadow=true;
+            1.15;
 
-        deck.position.y=2.6;
+        deck.receiveShadow = true;
 
         this.group.add(
 
             deck
-
-        );
-
-        //--------------------------------
-        // センターライン
-        //--------------------------------
-
-        const centerLine=
-
-            new THREE.Mesh(
-
-                new THREE.BoxGeometry(
-
-                    .18,
-
-                    .02,
-
-                    30
-
-                ),
-
-                new THREE.MeshBasicMaterial({
-
-                    color:0xffdd33
-
-                })
-
-            );
-
-        centerLine.position.set(
-
-            0,
-
-            2.84,
-
-            0
-
-        );
-
-        this.group.add(
-
-            centerLine
 
         );
 
@@ -111,11 +68,11 @@ export default class BridgeBuilder {
 
         [
 
-            -4.2,
+            -3.25,
 
-            4.2
+            3.25
 
-        ].forEach(x=>{
+        ].forEach(z=>{
 
             const line=
 
@@ -123,11 +80,11 @@ export default class BridgeBuilder {
 
                     new THREE.BoxGeometry(
 
-                        .14,
+                        31,
 
-                        .02,
+                        .03,
 
-                        30
+                        .08
 
                     ),
 
@@ -141,11 +98,11 @@ export default class BridgeBuilder {
 
             line.position.set(
 
-                x,
+                0,
 
-                2.84,
+                1.44,
 
-                0
+                z
 
             );
 
@@ -163,11 +120,11 @@ export default class BridgeBuilder {
 
         [
 
-            -4.8,
+            -4,
 
-            4.8
+            4
 
-        ].forEach(x=>{
+        ].forEach(z=>{
 
             const rail=
 
@@ -175,17 +132,21 @@ export default class BridgeBuilder {
 
                     new THREE.BoxGeometry(
 
-                        .12,
+                        31,
 
-                        .7,
+                        .15,
 
-                        34
+                        .12
 
                     ),
 
                     new THREE.MeshStandardMaterial({
 
-                        color:0xe4e4e4
+                        color:0xd6d6d6,
+
+                        metalness:.55,
+
+                        roughness:.35
 
                     })
 
@@ -193,15 +154,13 @@ export default class BridgeBuilder {
 
             rail.position.set(
 
-                x,
+                0,
 
-                3.1,
+                2.0,
 
-                0
+                z
 
             );
-
-            rail.castShadow=true;
 
             this.group.add(
 
@@ -209,37 +168,75 @@ export default class BridgeBuilder {
 
             );
 
+            for(
+
+                let x=-15;
+
+                x<=15;
+
+                x+=2
+
+            ){
+
+                const post=
+
+                    new THREE.Mesh(
+
+                        new THREE.BoxGeometry(
+
+                            .09,
+
+                            .9,
+
+                            .09
+
+                        ),
+
+                        rail.material
+
+                    );
+
+                post.position.set(
+
+                    x,
+
+                    1.55,
+
+                    z
+
+                );
+
+                this.group.add(
+
+                    post
+
+                );
+
+            }
+
         });
 
         //--------------------------------
-        // 支柱
+        // 橋脚
         //--------------------------------
 
-        const pierMat=
+        [
 
-            new THREE.MeshStandardMaterial({
+            -10,
 
-                color:0x909090
+            0,
 
-            });
+            10
 
-        for(
-
-            let z=-12;
-
-            z<=12;
-
-            z+=12
-
-        ){
+        ].forEach(x=>{
 
             [
 
-                -2.8,
+                -2.7,
 
-                2.8
+                2.7
 
-            ].forEach(x=>{
+            ].forEach(z=>{
 
                 const pier=
 
@@ -247,15 +244,19 @@ export default class BridgeBuilder {
 
                         new THREE.BoxGeometry(
 
-                            1,
+                            .9,
 
-                            5,
+                            3.8,
 
-                            1
+                            .9
 
                         ),
 
-                        pierMat
+                        new THREE.MeshStandardMaterial({
+
+                            color:0x8a8a8a
+
+                        })
 
                     );
 
@@ -263,15 +264,11 @@ export default class BridgeBuilder {
 
                     x,
 
-                    .2,
+                    -1,
 
                     z
 
                 );
-
-                pier.castShadow=true;
-
-                pier.receiveShadow=true;
 
                 this.group.add(
 
@@ -281,10 +278,8 @@ export default class BridgeBuilder {
 
             });
 
-        }
+        });
 
-        //--------------------------------
-        // 配置
         //--------------------------------
 
         this.group.position.copy(
