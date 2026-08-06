@@ -636,3 +636,343 @@ export default class PeopleBuilder {
     }
 
 }
+// ============================================================================
+// world/PeopleBuilder.js
+// V11
+// Part 3
+// BBQ・ランタン周辺のリアル寄り人物
+// ============================================================================
+
+//=========================================================================
+// BBQグループ
+//=========================================================================
+
+createBBQGroup(){
+
+    const group=new THREE.Group();
+
+    //--------------------------------
+    // BBQコンロ
+    //--------------------------------
+
+    const grill=
+
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+
+                1.0,
+
+                .35,
+
+                .6
+
+            ),
+
+            new THREE.MeshStandardMaterial({
+
+                color:0x444444
+
+            })
+
+        );
+
+    grill.position.y=.8;
+
+    group.add(grill);
+
+    //--------------------------------
+    // 炭火
+    //--------------------------------
+
+    const fire=
+
+        new THREE.PointLight(
+
+            0xff8844,
+
+            4,
+
+            12
+
+        );
+
+    fire.position.y=1.0;
+
+    group.add(fire);
+
+    //--------------------------------
+    // 肉
+    //--------------------------------
+
+    for(
+
+        let i=0;
+
+        i<8;
+
+        i++
+
+    ){
+
+        const meat=
+
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+
+                    .12,
+
+                    .03,
+
+                    .08
+
+                ),
+
+                new THREE.MeshStandardMaterial({
+
+                    color:0x9b3b2d
+
+                })
+
+            );
+
+        meat.position.set(
+
+            -.35+
+
+            Math.random()*.7,
+
+            .98,
+
+            -.18+
+
+            Math.random()*.35
+
+        );
+
+        group.add(meat);
+
+    }
+
+    //--------------------------------
+    // 人
+    //--------------------------------
+
+    const positions=[
+
+        [-1.3,0,-.9],
+
+        [ 1.3,0,-.8],
+
+        [-1.2,0,.8],
+
+        [ 1.2,0,.9]
+
+    ];
+
+    positions.forEach((p,i)=>{
+
+        const person=
+
+            this.createPerson(
+
+                i%2
+
+                ?"bbq"
+
+                :"talk",
+
+                i
+
+            );
+
+        person.position.set(
+
+            p[0],
+
+            0,
+
+            p[2]
+
+        );
+
+        person.lookAt(
+
+            0,
+
+            1,
+
+            0
+
+        );
+
+        group.add(
+
+            person
+
+        );
+
+    });
+
+    return group;
+
+}
+
+//=========================================================================
+// ランタングループ
+//=========================================================================
+
+createLanternArea(){
+
+    const group=
+
+        new THREE.Group();
+
+    //--------------------------------
+    // ランタン
+    //--------------------------------
+
+    for(
+
+        let i=0;
+
+        i<6;
+
+        i++
+
+    ){
+
+        const angle=
+
+            i/6*
+
+            Math.PI*2;
+
+        const lantern=
+
+            this.createLantern();
+
+        lantern.position.set(
+
+            Math.cos(angle)*2.8,
+
+            0,
+
+            Math.sin(angle)*2.8
+
+        );
+
+        group.add(
+
+            lantern
+
+        );
+
+    }
+
+    //--------------------------------
+    // 人
+    //--------------------------------
+
+    for(
+
+        let i=0;
+
+        i<6;
+
+        i++
+
+    ){
+
+        const angle=
+
+            i/6*
+
+            Math.PI*2;
+
+        const person=
+
+            this.createPerson(
+
+                "talk",
+
+                i+10
+
+            );
+
+        person.position.set(
+
+            Math.cos(angle)*1.7,
+
+            0,
+
+            Math.sin(angle)*1.7
+
+        );
+
+        person.lookAt(
+
+            0,
+
+            1,
+
+            0
+
+        );
+
+        group.add(
+
+            person
+
+        );
+
+    }
+
+    return group;
+
+}
+
+//=========================================================================
+// build()最後へ追加
+//=========================================================================
+
+const bbq=
+
+    this.createBBQGroup();
+
+bbq.position.set(
+
+    3,
+
+    0,
+
+    0
+
+);
+
+this.group.add(
+
+    bbq
+
+);
+
+const lanternArea=
+
+    this.createLanternArea();
+
+lanternArea.position.set(
+
+    -4,
+
+    0,
+
+    1
+
+);
+
+this.group.add(
+
+    lanternArea
+
+);
