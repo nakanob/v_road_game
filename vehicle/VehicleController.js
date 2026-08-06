@@ -1,209 +1,522 @@
+// ============================================================================
 // vehicle/VehicleController.js
+// Part 1
+// V11
+// 左右操作・バック・壁衝突・ジョイスティック対応
+// ============================================================================
 
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js";
+import * as THREE from "three";
 
-export class VehicleController {
+export default class VehicleController{
 
-    constructor(vehicle) {
+    constructor(vehicle){
 
         this.vehicle = vehicle;
 
-        this.input = vehicle.input;
+        this.speed = 0;
 
-        this.maxForwardSpeed = 35;
-        this.maxReverseSpeed = 12;
+        this.steer = 0;
 
-        this.acceleration = 10;
-        this.brakePower = 30;
+        this.maxSpeed = 18;
 
-        this.drag = 5;
+        this.reverseSpeed = 7;
 
-        this.maxSteeringAngle =
-            THREE.MathUtils.degToRad(35);
+        this.acceleration = 8;
 
-        this.steeringReturnSpeed = 2.5;
+        this.brakePower = 18;
 
-        this.currentSteering = 0;
+        this.drag = 3.2;
+
+        this.maxSteer =
+
+            THREE.MathUtils.degToRad(32);
+
+        this.steerSpeed = 2.8;
+
+        this.keys = {};
+
+        this.joystick = {
+
+            x:0,
+
+            y:0
+
+        };
+
+        //--------------------------------
+
+        window.addEventListener(
+
+            "keydown",
+
+            e=>{
+
+                this.keys[e.code]=true;
+
+            }
+
+        );
+
+        window.addEventListener(
+
+            "keyup",
+
+            e=>{
+
+                this.keys[e.code]=false;
+
+            }
+
+        );
 
     }
 
-    update(delta) {
+    //=========================================================================
+    // 仮想ジョイスティック
+    //=========================================================================
 
-        this.updateAcceleration(delta);
+    setJoystick(x,y){
 
-        this.updateSteering(delta);
+        this.joystick.x =
 
-        this.updateMovement(delta);
-
-    }
-
-    updateAcceleration(delta) {
-
-        if (this.input.keys.forward) {
-
-            this.vehicle.speed +=
-                this.acceleration * delta;
-
-        }
-
-        if (this.input.keys.backward) {
-
-            this.vehicle.speed -=
-                this.acceleration * delta;
-
-        }
-
-        if (this.input.keys.brake) {
-
-            if (this.vehicle.speed > 0) {
-
-                this.vehicle.speed -=
-                    this.brakePower * delta;
-
-            } else {
-
-                this.vehicle.speed +=
-                    this.brakePower * delta;
-
-            }
-
-        }
-
-        if (
-            !this.input.keys.forward &&
-            !this.input.keys.backward
-        ) {
-
-            if (this.vehicle.speed > 0) {
-
-                this.vehicle.speed -=
-                    this.drag * delta;
-
-                if (this.vehicle.speed < 0) {
-
-                    this.vehicle.speed = 0;
-
-                }
-
-            }
-
-            if (this.vehicle.speed < 0) {
-
-                this.vehicle.speed +=
-                    this.drag * delta;
-
-                if (this.vehicle.speed > 0) {
-
-                    this.vehicle.speed = 0;
-
-                }
-
-            }
-
-        }
-
-        this.vehicle.speed =
             THREE.MathUtils.clamp(
 
-                this.vehicle.speed,
+                x,
 
-                -this.maxReverseSpeed,
+                -1,
 
-                this.maxForwardSpeed
+                1
+
+            );
+
+        this.joystick.y =
+
+            THREE.MathUtils.clamp(
+
+                y,
+
+                -1,
+
+                1
 
             );
 
     }
 
-    updateSteering(delta) {
+    //=========================================================================
+    // 更新
+    //=========================================================================
 
-        if (this.input.keys.left) {
+    update(delta){
 
-            this.currentSteering +=
-                this.maxSteeringAngle * delta;
+        //--------------------------------
+        // 前後入力
+        //--------------------------------
+
+        let throttle = 0;
+
+        if(
+
+            this.keys["ArrowUp"] ||
+
+            this.keys["KeyW"]
+
+        ){
+
+            throttle += 1;
 
         }
 
-        else if (this.input.keys.right) {
+        if(
 
-            this.currentSteering -=
-                this.maxSteeringAngle * delta;
+            this.keys["ArrowDown"] ||
+
+            this.keys["KeyS"]
+
+        ){
+
+            throttle -= 1;
 
         }
 
-        else {
+        throttle -=
 
-            this.currentSteering =
-                THREE.MathUtils.lerp(
+            this.joystick.y;
 
-                    this.currentSteering,
+        //--------------------------------
+        // 左右入力
+        //--------------------------------
+
+        let steer = 0;
+
+        if(
+
+            this.keys["ArrowLeft"] ||
+
+            this.keys["KeyA"]
+
+        ){
+
+            steer += 1;
+
+        }
+
+        if(
+
+            this.keys["ArrowRight"] ||
+
+            this.keys["KeyD"]
+
+        ){
+
+            steer -= 1;
+
+        }
+
+        steer -=
+
+            this.joystick.x;
+
+        //--------------------------------
+        // 加速
+        //--------------------------------
+
+        if(throttle>0){
+
+            this.speed +=
+
+                this.acceleration*
+
+                delta;
+
+        }
+
+        //--------------------------------
+        // バック
+        //--------------------------------
+
+        else if(throttle<0){
+
+            this.speed -=
+
+                this.acceleration*
+
+                delta;
+
+        }
+
+        //--------------------------------
+        // 抵抗
+        //--------------------------------
+
+        else{
+
+            this.speed=
+
+                THREE.MathUtils.damp(
+
+                    this.speed,
 
                     0,
 
-                    this.steeringReturnSpeed * delta
+                    this.drag,
+
+                    delta
 
                 );
 
         }
 
-        this.currentSteering =
+        //--------------------------------
+        // 制限
+        //--------------------------------
+
+        this.speed=
+
             THREE.MathUtils.clamp(
 
-                this.currentSteering,
+                this.speed,
 
-                -this.maxSteeringAngle,
+                -this.reverseSpeed,
 
-                this.maxSteeringAngle
+                this.maxSpeed
 
             );
 
-    }
+        //--------------------------------
+        // ステア
+        //--------------------------------
 
-    updateMovement(delta) {
+        this.steer=
 
-        const steeringFactor =
+            THREE.MathUtils.damp(
+
+                this.steer,
+
+                steer*
+
+                this.maxSteer,
+
+                this.steerSpeed,
+
+                delta
+
+            );
+
+        //--------------------------------
+        // ★前進・後退で左右が逆にならない
+        //--------------------------------
+
+        this.vehicle.heading -=
+
+            this.steer *
+
+            delta *
+
             Math.abs(
-                this.vehicle.speed
-            ) / this.maxForwardSpeed;
 
-        this.vehicle.direction +=
+                this.speed
 
-            this.currentSteering *
+            ) *
 
-            steeringFactor *
+            0.52;
 
-            delta;
+        //--------------------------------
+        // 移動
+        //--------------------------------
 
-        this.vehicle.position.x +=
+        this.vehicle.root.position.x +=
 
             Math.sin(
-                this.vehicle.direction
+
+                this.vehicle.heading
+
             ) *
 
-            this.vehicle.speed *
+            this.speed *
 
             delta;
 
-        this.vehicle.position.z +=
+        this.vehicle.root.position.z +=
 
             Math.cos(
-                this.vehicle.direction
+
+                this.vehicle.heading
+
             ) *
 
-            this.vehicle.speed *
+            this.speed *
 
             delta;
-
-        this.vehicle.position.y =
-
-            this.vehicle.terrain.getHeight(
-
-                this.vehicle.position.x,
-
-                this.vehicle.position.z
-
-            );
 
     }
 
 }
+// ============================================================================
+// vehicle/VehicleController.js
+// Part 2
+// V11
+// 壁衝突・道路外減速・進行率計算・ゴール判定
+// ============================================================================
+
+//=========================================================================
+// 地形追従
+//=========================================================================
+
+updateGround(delta){
+
+    const y=
+
+        this.vehicle.world.getHeight(
+
+            this.vehicle.root.position.x,
+
+            this.vehicle.root.position.z
+
+        );
+
+    this.vehicle.root.position.y=
+
+        THREE.MathUtils.damp(
+
+            this.vehicle.root.position.y,
+
+            y,
+
+            12,
+
+            delta
+
+        );
+
+}
+
+//=========================================================================
+// 道路外判定
+//=========================================================================
+
+updateRoadLimit(delta){
+
+    const pose=
+
+        this.vehicle.world.getNearestPose(
+
+            this.vehicle.root.position
+
+        );
+
+    const offset=
+
+        pose.side.dot(
+
+            this.vehicle.root.position
+
+                .clone()
+
+                .sub(
+
+                    pose.position
+
+                )
+
+        );
+
+    //--------------------------------
+    // 進行率
+    //--------------------------------
+
+    this.vehicle.progress=
+
+        pose.progress;
+
+    //--------------------------------
+    // 道路外
+    //--------------------------------
+
+    if(
+
+        Math.abs(offset)>
+
+        this.vehicle.world.roadHalfWidth
+
+    ){
+
+        //--------------------------------
+        // 少し滑る
+        //--------------------------------
+
+        this.speed*=0.985;
+
+        //--------------------------------
+        // 壁方向へ押し戻す
+        //--------------------------------
+
+        const over=
+
+            Math.abs(offset)-
+
+            this.vehicle.world
+
+                .roadHalfWidth;
+
+        const push=
+
+            pose.side.clone()
+
+                .multiplyScalar(
+
+                    offset>0
+
+                    ?-over*.18
+
+                    :over*.18
+
+                );
+
+        this.vehicle.root.position.add(
+
+            push
+
+        );
+
+        //--------------------------------
+        // 衝突回数
+        //--------------------------------
+
+        if(
+
+            !this.hitCooldown
+
+        ){
+
+            this.hitCooldown=.35;
+
+            this.vehicle.hitCount++;
+
+        }
+
+    }
+
+    //--------------------------------
+
+    if(this.hitCooldown){
+
+        this.hitCooldown-=delta;
+
+        if(this.hitCooldown<0){
+
+            this.hitCooldown=0;
+
+        }
+
+    }
+
+}
+
+//=========================================================================
+// ゴール
+//=========================================================================
+
+updateGoal(){
+
+    if(
+
+        this.vehicle.progress>
+
+        .995 &&
+
+        !this.vehicle.goal
+
+    ){
+
+        this.vehicle.goal=true;
+
+        this.speed=0;
+
+        this.vehicle.finishTime=
+
+            performance.now();
+
+        this.vehicle.onGoal?.();
+
+    }
+
+}
+
+//=========================================================================
+// update()最後へ追加
+//=========================================================================
+
+this.updateGround(
+
+    delta
+
+);
+
+this.updateRoadLimit(
+
+    delta
+
+);
+
+this.updateGoal();
