@@ -1106,3 +1106,820 @@ createBuildings(){
     }
 
 }
+// ============================================================================
+// world/TownBuilder.js
+// V11
+// Part 4
+// ショッピングモール・コンビニ・横断歩道
+// ============================================================================
+
+//=========================================================================
+// ショッピングモール
+//=========================================================================
+
+createShoppingMall(){
+
+    const pose=
+
+        this.world.getPose(
+
+            0.18,
+
+            22
+
+        );
+
+    const g=
+
+        new THREE.Group();
+
+    //--------------------------------
+    // 建物
+    //--------------------------------
+
+    const mall=
+
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+
+                18,
+
+                5,
+
+                12
+
+            ),
+
+            new THREE.MeshStandardMaterial({
+
+                color:0xf4efe7
+
+            })
+
+        );
+
+    mall.position.y=2.5;
+
+    g.add(mall);
+
+    //--------------------------------
+    // ガラス
+    //--------------------------------
+
+    const glass=
+
+        new THREE.Mesh(
+
+            new THREE.PlaneGeometry(
+
+                12,
+
+                2.6
+
+            ),
+
+            new THREE.MeshBasicMaterial({
+
+                color:0x9edcff
+
+            })
+
+        );
+
+    glass.position.set(
+
+        0,
+
+        2,
+
+        6.05
+
+    );
+
+    g.add(glass);
+
+    //--------------------------------
+    // 看板
+    //--------------------------------
+
+    const sign=
+
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+
+                6,
+
+                .8,
+
+                .25
+
+            ),
+
+            new THREE.MeshStandardMaterial({
+
+                color:0xe54b2f
+
+            })
+
+        );
+
+    sign.position.set(
+
+        0,
+
+        4.6,
+
+        6.15
+
+    );
+
+    g.add(sign);
+
+    //--------------------------------
+    // 駐車場
+    //--------------------------------
+
+    const parking=
+
+        new THREE.Mesh(
+
+            new THREE.PlaneGeometry(
+
+                18,
+
+                10
+
+            ),
+
+            new THREE.MeshStandardMaterial({
+
+                color:0x666666
+
+            })
+
+        );
+
+    parking.rotation.x=
+
+        -Math.PI/2;
+
+    parking.position.y=.02;
+
+    parking.position.z=11;
+
+    g.add(parking);
+
+    g.position.copy(
+
+        pose.position
+
+    );
+
+    g.rotation.y=
+
+        pose.heading;
+
+    this.group.add(
+
+        g
+
+    );
+
+}
+
+//=========================================================================
+// コンビニ
+//=========================================================================
+
+createConvenienceStore(){
+
+    const pose=
+
+        this.world.getPose(
+
+            0.145,
+
+            -16
+
+        );
+
+    const g=
+
+        new THREE.Group();
+
+    const body=
+
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+
+                8,
+
+                3,
+
+                6
+
+            ),
+
+            new THREE.MeshStandardMaterial({
+
+                color:0xfafafa
+
+            })
+
+        );
+
+    body.position.y=1.5;
+
+    g.add(body);
+
+    //--------------------------------
+    // ライン
+    //--------------------------------
+
+    [
+
+        0x1db954,
+
+        0xff7f27,
+
+        0xd92323
+
+    ].forEach((c,i)=>{
+
+        const line=
+
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+
+                    8,
+
+                    .12,
+
+                    .08
+
+                ),
+
+                new THREE.MeshBasicMaterial({
+
+                    color:c
+
+                })
+
+            );
+
+        line.position.set(
+
+            0,
+
+            2.45-i*.18,
+
+            3.05
+
+        );
+
+        g.add(line);
+
+    });
+
+    //--------------------------------
+    // ガラス
+    //--------------------------------
+
+    const glass=
+
+        new THREE.Mesh(
+
+            new THREE.PlaneGeometry(
+
+                6,
+
+                2
+
+            ),
+
+            new THREE.MeshBasicMaterial({
+
+                color:0xa8e2ff
+
+            })
+
+        );
+
+    glass.position.set(
+
+        0,
+
+        1.5,
+
+        3.06
+
+    );
+
+    g.add(glass);
+
+    g.position.copy(
+
+        pose.position
+
+    );
+
+    g.rotation.y=
+
+        pose.heading+
+
+        Math.PI;
+
+    this.group.add(
+
+        g
+
+    );
+
+}
+
+//=========================================================================
+// 横断歩道
+//=========================================================================
+
+createCrossWalk(progress){
+
+    const pose=
+
+        this.world.getPose(
+
+            progress,
+
+            0
+
+        );
+
+    const group=
+
+        new THREE.Group();
+
+    for(
+
+        let i=-4;
+
+        i<=4;
+
+        i++
+
+    ){
+
+        const stripe=
+
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+
+                    .7,
+
+                    .02,
+
+                    1.9
+
+                ),
+
+                new THREE.MeshBasicMaterial({
+
+                    color:0xffffff
+
+                })
+
+            );
+
+        stripe.position.set(
+
+            i*.9,
+
+            .12,
+
+            0
+
+        );
+
+        group.add(
+
+            stripe
+
+        );
+
+    }
+
+    group.rotation.y=
+
+        pose.heading;
+
+    group.position.copy(
+
+        pose.position);
+
+    this.group.add(
+
+        group
+
+    );
+
+}
+
+//=========================================================================
+// build() の最後へ追加
+//=========================================================================
+
+this.createShoppingMall();
+
+this.createConvenienceStore();
+
+this.createCrossWalk(0.09);
+
+this.createCrossWalk(0.23);
+
+// ============================================================================
+// world/TownBuilder.js
+// V11
+// Part 5
+// 街の駐車車両・街路樹・街灯・道路標識
+// ============================================================================
+
+//=========================================================================
+// 駐車車両
+//=========================================================================
+
+createParkedCars(){
+
+    const colors=[
+
+        0xffffff,
+        0xdc2f2f,
+        0x3b6fd9,
+        0x444444,
+        0xc7c7c7
+
+    ];
+
+    for(
+
+        let i=0;
+
+        i<18;
+
+        i++
+
+    ){
+
+        const pose=
+
+            this.world.getPose(
+
+                0.05+i*0.012,
+
+                i%2?11.5:-11.5
+
+            );
+
+        const g=new THREE.Group();
+
+        //--------------------------------
+        // ボディ
+        //--------------------------------
+
+        const body=
+
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+
+                    1.8,
+
+                    .65,
+
+                    .95
+
+                ),
+
+                new THREE.MeshStandardMaterial({
+
+                    color:
+
+                    colors[
+
+                        Math.floor(
+
+                            Math.random()*colors.length
+
+                        )
+
+                    ]
+
+                })
+
+            );
+
+        body.position.y=.45;
+
+        g.add(body);
+
+        //--------------------------------
+        // キャビン
+        //--------------------------------
+
+        const cabin=
+
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+
+                    .95,
+
+                    .45,
+
+                    .82
+
+                ),
+
+                new THREE.MeshStandardMaterial({
+
+                    color:0x99d9ff
+
+                })
+
+            );
+
+        cabin.position.set(
+
+            .15,
+
+            .92,
+
+            0
+
+        );
+
+        g.add(cabin);
+
+        g.position.copy(
+
+            pose.position
+
+        );
+
+        g.rotation.y=
+
+            pose.heading+
+
+            (i%2?0:Math.PI);
+
+        this.group.add(
+
+            g
+
+        );
+
+    }
+
+}
+
+//=========================================================================
+// 街路樹
+//=========================================================================
+
+createStreetTrees(){
+
+    for(
+
+        let i=0;
+
+        i<28;
+
+        i++
+
+    ){
+
+        const pose=
+
+            this.world.getPose(
+
+                .03+i*.009,
+
+                i%2?9:-9
+
+            );
+
+        const tree=
+
+            new THREE.Group();
+
+        const trunk=
+
+            new THREE.Mesh(
+
+                new THREE.CylinderGeometry(
+
+                    .08,
+
+                    .1,
+
+                    1,
+
+                    8
+
+                ),
+
+                new THREE.MeshStandardMaterial({
+
+                    color:0x6c4828
+
+                })
+
+            );
+
+        trunk.position.y=.5;
+
+        tree.add(trunk);
+
+        const crown=
+
+            new THREE.Mesh(
+
+                new THREE.SphereGeometry(
+
+                    .55,
+
+                    10,
+
+                    10
+
+                ),
+
+                new THREE.MeshStandardMaterial({
+
+                    color:0x4e8a38
+
+                })
+
+            );
+
+        crown.position.y=1.45;
+
+        tree.add(crown);
+
+        tree.position.copy(
+
+            pose.position
+
+        );
+
+        this.group.add(tree);
+
+    }
+
+}
+
+//=========================================================================
+// 街灯
+//=========================================================================
+
+createStreetLights(){
+
+    for(
+
+        let i=0;
+
+        i<20;
+
+        i++
+
+    ){
+
+        const pose=
+
+            this.world.getPose(
+
+                .05+i*.013,
+
+                i%2?7.2:-7.2
+
+            );
+
+        const pole=
+
+            new THREE.Group();
+
+        const body=
+
+            new THREE.Mesh(
+
+                new THREE.CylinderGeometry(
+
+                    .05,
+
+                    .05,
+
+                    4,
+
+                    8
+
+                ),
+
+                new THREE.MeshStandardMaterial({
+
+                    color:0x777777
+
+                })
+
+            );
+
+        body.position.y=2;
+
+        pole.add(body);
+
+        const arm=
+
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+
+                    .55,
+
+                    .05,
+
+                    .05
+
+                ),
+
+                body.material
+
+            );
+
+        arm.position.set(
+
+            .25,
+
+            3.9,
+
+            0
+
+        );
+
+        pole.add(arm);
+
+        const lamp=
+
+            new THREE.PointLight(
+
+                0xffe5ad,
+
+                0,
+
+                8
+
+            );
+
+        lamp.position.set(
+
+            .48,
+
+            3.8,
+
+            0
+
+        );
+
+        pole.add(lamp);
+
+        pole.position.copy(
+
+            pose.position
+
+        );
+
+        pole.rotation.y=
+
+            pose.heading+
+
+            (i%2?0:Math.PI);
+
+        this.group.add(
+
+            pole
+
+        );
+
+    }
+
+}
+
+//=========================================================================
+// build()最後へ追加
+//=========================================================================
+
+this.createParkedCars();
+
+this.createStreetTrees();
+
+this.createStreetLights();
