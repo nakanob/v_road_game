@@ -2582,3 +2582,2553 @@ vehicle.lockControl = false;
 vehicle.headLightsOn = false;
 
 vehicle.tailLightsOn = false;
+// ============================================================================
+// world/TrackWorld.js
+// Part 8
+// V11 最終統合 Part 1
+// コース・川・橋・トンネル・街・植生・キャンプ場を接続
+// ============================================================================
+
+import * as THREE from "three";
+
+import TownBuilder from "./TownBuilder.js";
+import RiverSystem from "./RiverSystem.js";
+import BridgeBuilder from "./BridgeBuilder.js";
+import TunnelBuilder from "./TunnelBuilder.js";
+import CampBuilder from "./CampBuilder.js";
+import PeopleBuilder from "./PeopleBuilder.js";
+import VegetationManager from "./VegetationManager.js";
+
+export default class TrackWorld {
+
+    constructor(scene) {
+
+        this.scene = scene;
+
+        this.roadHalfWidth = 5.4;
+
+        this.length = 1500;
+
+        this.sampleCount = 650;
+
+        this.samples = [];
+
+        this.currentArea = "town";
+
+        this.waterPlane = null;
+
+        this.goalReached = false;
+
+        this.startTime = 0;
+
+        this.createCourseCurve();
+
+        this.createSharedTextures();
+
+        this.createBuilders();
+
+    }
+
+    //=========================================================================
+    // コース
+    //=========================================================================
+
+    createCourseCurve() {
+
+        this.curve =
+
+            new THREE.CatmullRomCurve3(
+
+                [
+
+                    new THREE.Vector3(
+                        0,
+                        0,
+                        0
+                    ),
+
+                    new THREE.Vector3(
+                        0,
+                        0,
+                        120
+                    ),
+
+                    new THREE.Vector3(
+                        16,
+                        0,
+                        240
+                    ),
+
+                    new THREE.Vector3(
+                        -18,
+                        0,
+                        360
+                    ),
+
+                    new THREE.Vector3(
+                        -42,
+                        0,
+                        480
+                    ),
+
+                    new THREE.Vector3(
+                        -12,
+                        1.5,
+                        600
+                    ),
+
+                    new THREE.Vector3(
+                        30,
+                        5,
+                        720
+                    ),
+
+                    new THREE.Vector3(
+                        50,
+                        13,
+                        840
+                    ),
+
+                    new THREE.Vector3(
+                        20,
+                        20,
+                        960
+                    ),
+
+                    new THREE.Vector3(
+                        -24,
+                        16,
+                        1080
+                    ),
+
+                    new THREE.Vector3(
+                        -38,
+                        8,
+                        1200
+                    ),
+
+                    new THREE.Vector3(
+                        -10,
+                        5,
+                        1340
+                    ),
+
+                    new THREE.Vector3(
+                        24,
+                        4,
+                        1490
+                    )
+
+                ],
+
+                false,
+
+                "catmullrom",
+
+                0.22
+
+            );
+
+    }
+
+    //=========================================================================
+    // テクスチャ
+    //=========================================================================
+
+    createSharedTextures() {
+
+        this.textures = {
+
+            asphalt:
+                this.createCanvasTexture(
+
+                    256,
+
+                    (
+
+                        ctx,
+
+                        size
+
+                    ) => {
+
+                        ctx.fillStyle =
+                            "#4b5054";
+
+                        ctx.fillRect(
+
+                            0,
+
+                            0,
+
+                            size,
+
+                            size
+
+                        );
+
+                        for (
+
+                            let i = 0;
+
+                            i < 1100;
+
+                            i++
+
+                        ) {
+
+                            const value =
+
+                                55 +
+
+                                Math.random() *
+
+                                75;
+
+                            ctx.fillStyle =
+
+                                `rgba(${value},${value},${value},0.13)`;
+
+                            ctx.fillRect(
+
+                                Math.random() *
+                                size,
+
+                                Math.random() *
+                                size,
+
+                                1 +
+
+                                Math.random() *
+                                3,
+
+                                1 +
+
+                                Math.random() *
+                                3
+
+                            );
+
+                        }
+
+                    }
+
+                ),
+
+            grass:
+                this.createCanvasTexture(
+
+                    256,
+
+                    (
+
+                        ctx,
+
+                        size
+
+                    ) => {
+
+                        ctx.fillStyle =
+                            "#6f8b4c";
+
+                        ctx.fillRect(
+
+                            0,
+
+                            0,
+
+                            size,
+
+                            size
+
+                        );
+
+                        for (
+
+                            let i = 0;
+
+                            i < 900;
+
+                            i++
+
+                        ) {
+
+                            ctx.strokeStyle =
+
+                                Math.random() > 0.5
+
+                                    ? "rgba(150,185,92,0.45)"
+
+                                    : "rgba(52,91,39,0.42)";
+
+                            const x =
+
+                                Math.random() *
+                                size;
+
+                            const y =
+
+                                Math.random() *
+                                size;
+
+                            ctx.beginPath();
+
+                            ctx.moveTo(
+
+                                x,
+
+                                y
+
+                            );
+
+                            ctx.lineTo(
+
+                                x +
+
+                                Math.random() *
+                                2 -
+
+                                1,
+
+                                y -
+
+                                3 -
+
+                                Math.random() *
+                                6
+
+                            );
+
+                            ctx.stroke();
+
+                        }
+
+                    }
+
+                ),
+
+            rock:
+                this.createCanvasTexture(
+
+                    256,
+
+                    (
+
+                        ctx,
+
+                        size
+
+                    ) => {
+
+                        ctx.fillStyle =
+                            "#777069";
+
+                        ctx.fillRect(
+
+                            0,
+
+                            0,
+
+                            size,
+
+                            size
+
+                        );
+
+                        for (
+
+                            let i = 0;
+
+                            i < 620;
+
+                            i++
+
+                        ) {
+
+                            const value =
+
+                                70 +
+
+                                Math.random() *
+                                80;
+
+                            ctx.fillStyle =
+
+                                `rgba(${value},${value},${value},0.18)`;
+
+                            ctx.beginPath();
+
+                            ctx.arc(
+
+                                Math.random() *
+                                size,
+
+                                Math.random() *
+                                size,
+
+                                1 +
+
+                                Math.random() *
+                                7,
+
+                                0,
+
+                                Math.PI *
+                                2
+
+                            );
+
+                            ctx.fill();
+
+                        }
+
+                    }
+
+                ),
+
+            dirt:
+                this.createCanvasTexture(
+
+                    256,
+
+                    (
+
+                        ctx,
+
+                        size
+
+                    ) => {
+
+                        ctx.fillStyle =
+                            "#805e42";
+
+                        ctx.fillRect(
+
+                            0,
+
+                            0,
+
+                            size,
+
+                            size
+
+                        );
+
+                        for (
+
+                            let i = 0;
+
+                            i < 700;
+
+                            i++
+
+                        ) {
+
+                            ctx.fillStyle =
+
+                                Math.random() >
+                                0.5
+
+                                    ? "rgba(48,31,20,0.18)"
+
+                                    : "rgba(215,170,110,0.18)";
+
+                            ctx.beginPath();
+
+                            ctx.arc(
+
+                                Math.random() *
+                                size,
+
+                                Math.random() *
+                                size,
+
+                                1 +
+
+                                Math.random() *
+                                3,
+
+                                0,
+
+                                Math.PI *
+                                2
+
+                            );
+
+                            ctx.fill();
+
+                        }
+
+                    }
+
+                )
+
+        };
+
+    }
+
+    createCanvasTexture(
+
+        size,
+
+        draw
+
+    ) {
+
+        const canvas =
+
+            document.createElement(
+
+                "canvas"
+
+            );
+
+        canvas.width =
+
+            size;
+
+        canvas.height =
+
+            size;
+
+        const context =
+
+            canvas.getContext(
+
+                "2d"
+
+            );
+
+        draw(
+
+            context,
+
+            size
+
+        );
+
+        const texture =
+
+            new THREE.CanvasTexture(
+
+                canvas
+
+            );
+
+        texture.colorSpace =
+
+            THREE.SRGBColorSpace;
+
+        texture.wrapS =
+
+            THREE.RepeatWrapping;
+
+        texture.wrapT =
+
+            THREE.RepeatWrapping;
+
+        return texture;
+
+    }
+
+    //=========================================================================
+    // Builder
+    //=========================================================================
+
+    createBuilders() {
+
+        this.townBuilder =
+
+            new TownBuilder(
+
+                this.scene,
+
+                this
+
+            );
+
+        this.riverSystem =
+
+            new RiverSystem(
+
+                this.scene
+
+            );
+
+        this.bridgeBuilder =
+
+            new BridgeBuilder(
+
+                this.scene
+
+            );
+
+        this.tunnelBuilder =
+
+            new TunnelBuilder(
+
+                this.scene
+
+            );
+
+        this.campBuilder =
+
+            new CampBuilder(
+
+                this.scene
+
+            );
+
+        this.peopleBuilder =
+
+            new PeopleBuilder(
+
+                this.scene
+
+            );
+
+        this.vegetation =
+
+            new VegetationManager(
+
+                this.scene
+
+            );
+
+    }
+
+    //=========================================================================
+    // ワールド生成
+    //=========================================================================
+
+    async build() {
+
+        this.buildSamples();
+
+        this.createBaseGround();
+
+        this.createAreaGround();
+
+        this.createRoad();
+
+        this.createRoadEdges();
+
+        this.townBuilder.build();
+
+        this.createRiverBridge();
+
+        this.createTunnelArea();
+
+        this.createVegetation();
+
+        this.createCampArea();
+
+        this.createGoalTrigger();
+
+        this.startTime =
+
+            performance.now();
+
+    }
+
+    //=========================================================================
+    // サンプル生成
+    //=========================================================================
+
+    buildSamples() {
+
+        this.samples.length = 0;
+
+        let distance = 0;
+
+        let previous = null;
+
+        for (
+
+            let i = 0;
+
+            i <= this.sampleCount;
+
+            i++
+
+        ) {
+
+            const progress =
+
+                i /
+
+                this.sampleCount;
+
+            const point =
+
+                this.curve.getPointAt(
+
+                    progress
+
+                );
+
+            const tangent =
+
+                this.curve.getTangentAt(
+
+                    progress
+
+                ).normalize();
+
+            const side =
+
+                new THREE.Vector3(
+
+                    tangent.z,
+
+                    0,
+
+                    -tangent.x
+
+                ).normalize();
+
+            if (previous) {
+
+                distance +=
+
+                    point.distanceTo(
+
+                        previous
+
+                    );
+
+            }
+
+            this.samples.push({
+
+                progress,
+
+                point,
+
+                tangent,
+
+                side,
+
+                distance,
+
+                heading:
+                    Math.atan2(
+
+                        tangent.x,
+
+                        tangent.z
+
+                    )
+
+            });
+
+            previous =
+
+                point.clone();
+
+        }
+
+        this.length =
+
+            distance;
+
+    }
+
+    //=========================================================================
+    // コース姿勢取得
+    //=========================================================================
+
+    getPose(
+
+        progress,
+
+        laneOffset = 0
+
+    ) {
+
+        const safeProgress =
+
+            THREE.MathUtils.clamp(
+
+                progress,
+
+                0,
+
+                1
+
+            );
+
+        const index =
+
+            Math.min(
+
+                this.sampleCount,
+
+                Math.round(
+
+                    safeProgress *
+
+                    this.sampleCount
+
+                )
+
+            );
+
+        const sample =
+
+            this.samples[index];
+
+        const position =
+
+            sample.point
+
+                .clone()
+
+                .addScaledVector(
+
+                    sample.side,
+
+                    laneOffset
+
+                );
+
+        return {
+
+            progress:
+                sample.progress,
+
+            position,
+
+            tangent:
+                sample.tangent.clone(),
+
+            side:
+                sample.side.clone(),
+
+            heading:
+                sample.heading,
+
+            index
+
+        };
+
+    }
+
+    getSample(progress) {
+
+        return this.getPose(
+
+            progress,
+
+            0
+
+        );
+
+    }
+
+}
+// ============================================================================
+// world/TrackWorld.js
+// Part 9
+// V11 最終統合 Part 2
+// 地面・道路・川・橋・トンネル・植生・キャンプ場
+// ============================================================================
+
+// ============================================================================
+// 全体地面
+// ============================================================================
+
+createBaseGround() {
+
+    const material =
+        new THREE.MeshStandardMaterial({
+
+            map:
+                this.textures.grass,
+
+            color:
+                0x78914f,
+
+            roughness:
+                1
+
+        });
+
+    material.map.repeat.set(
+
+        110,
+
+        110
+
+    );
+
+    const ground =
+        new THREE.Mesh(
+
+            new THREE.PlaneGeometry(
+
+                2200,
+
+                2200,
+
+                1,
+
+                1
+
+            ),
+
+            material
+
+        );
+
+    ground.rotation.x =
+        -Math.PI / 2;
+
+    ground.position.set(
+
+        0,
+
+        -1.2,
+
+        740
+
+    );
+
+    ground.receiveShadow =
+        true;
+
+    this.scene.add(
+
+        ground
+
+    );
+
+}
+
+
+// ============================================================================
+// エリア別地面
+// ============================================================================
+
+createAreaGround() {
+
+    const areaSettings = [
+
+        {
+
+            start:
+                0,
+
+            end:
+                0.28,
+
+            width:
+                38,
+
+            segments:
+                18,
+
+            material:
+                new THREE.MeshStandardMaterial({
+
+                    color:
+                        0x999c94,
+
+                    roughness:
+                        1
+
+                }),
+
+            height:
+                () => -0.08
+
+        },
+
+        {
+
+            start:
+                0.28,
+
+            end:
+                0.56,
+
+            width:
+                62,
+
+            segments:
+                24,
+
+            material:
+                new THREE.MeshStandardMaterial({
+
+                    map:
+                        this.textures.grass,
+
+                    color:
+                        0x77904d,
+
+                    roughness:
+                        1
+
+                }),
+
+            height:
+                (
+
+                    offset,
+
+                    sample
+
+                ) => {
+
+                    const distance =
+
+                        Math.abs(
+
+                            offset
+
+                        );
+
+                    if (
+
+                        distance < 10
+
+                    ) {
+
+                        return -0.08;
+
+                    }
+
+                    return (
+
+                        (
+
+                            distance -
+
+                            10
+
+                        ) *
+
+                        0.012
+
+                    ) +
+
+                    Math.sin(
+
+                        sample.point.z *
+
+                        0.022 +
+
+                        offset *
+
+                        0.08
+
+                    ) *
+
+                    0.24 -
+
+                    0.11;
+
+                }
+
+        },
+
+        {
+
+            start:
+                0.56,
+
+            end:
+                0.82,
+
+            width:
+                76,
+
+            segments:
+                28,
+
+            material:
+                new THREE.MeshStandardMaterial({
+
+                    map:
+                        this.textures.rock,
+
+                    color:
+                        0x80766d,
+
+                    roughness:
+                        1
+
+                }),
+
+            height:
+                (
+
+                    offset,
+
+                    sample
+
+                ) => {
+
+                    const distance =
+
+                        Math.abs(
+
+                            offset
+
+                        );
+
+                    if (
+
+                        distance < 11
+
+                    ) {
+
+                        return -0.06;
+
+                    }
+
+                    const blend =
+
+                        THREE.MathUtils.smoothstep(
+
+                            distance,
+
+                            11,
+
+                            21
+
+                        );
+
+                    const rise =
+
+                        (
+
+                            distance -
+
+                            11
+
+                        ) *
+
+                        0.085;
+
+                    const roughness =
+
+                        Math.sin(
+
+                            sample.point.z *
+
+                            0.03 +
+
+                            offset *
+
+                            0.07
+
+                        ) *
+
+                        0.42 +
+
+                        Math.cos(
+
+                            sample.point.x *
+
+                            0.05
+
+                        ) *
+
+                        0.24;
+
+                    return THREE.MathUtils.lerp(
+
+                        -0.06,
+
+                        rise +
+
+                        roughness,
+
+                        blend
+
+                    );
+
+                }
+
+        },
+
+        {
+
+            start:
+                0.82,
+
+            end:
+                1,
+
+            width:
+                58,
+
+            segments:
+                22,
+
+            material:
+                new THREE.MeshStandardMaterial({
+
+                    map:
+                        this.textures.dirt,
+
+                    color:
+                        0x806043,
+
+                    roughness:
+                        1
+
+                }),
+
+            height:
+                (
+
+                    offset,
+
+                    sample
+
+                ) => {
+
+                    return (
+
+                        Math.max(
+
+                            0,
+
+                            Math.abs(
+
+                                offset
+
+                            ) -
+
+                            12
+
+                        ) *
+
+                        0.024
+
+                    ) +
+
+                    Math.sin(
+
+                        sample.point.z *
+
+                        0.028 +
+
+                        offset *
+
+                        0.06
+
+                    ) *
+
+                    0.16 -
+
+                    0.12;
+
+                }
+
+        }
+
+    ];
+
+    for (
+
+        const area of
+
+        areaSettings
+
+    ) {
+
+        this.createTerrainRibbon(
+
+            area.start,
+
+            area.end,
+
+            area.width,
+
+            area.segments,
+
+            area.material,
+
+            area.height
+
+        );
+
+    }
+
+}
+
+
+// ============================================================================
+// 地形帯生成
+// ============================================================================
+
+createTerrainRibbon(
+
+    startProgress,
+
+    endProgress,
+
+    width,
+
+    lateralSegments,
+
+    material,
+
+    heightFunction
+
+) {
+
+    const startIndex =
+
+        Math.floor(
+
+            startProgress *
+
+            this.sampleCount
+
+        );
+
+    const endIndex =
+
+        Math.ceil(
+
+            endProgress *
+
+            this.sampleCount
+
+        );
+
+    const rowCount =
+
+        endIndex -
+
+        startIndex;
+
+    const positions = [];
+
+    const uvs = [];
+
+    const indices = [];
+
+    for (
+
+        let index =
+
+            startIndex;
+
+        index <=
+
+            endIndex;
+
+        index++
+
+    ) {
+
+        const sample =
+
+            this.samples[index];
+
+        const rowProgress =
+
+            rowCount > 0
+
+                ? (
+
+                    index -
+
+                    startIndex
+
+                ) /
+
+                rowCount
+
+                : 0;
+
+        for (
+
+            let segment = 0;
+
+            segment <=
+
+                lateralSegments;
+
+            segment++
+
+        ) {
+
+            const horizontal =
+
+                segment /
+
+                lateralSegments;
+
+            const offset =
+
+                THREE.MathUtils.lerp(
+
+                    -width,
+
+                    width,
+
+                    horizontal
+
+                );
+
+            const position =
+
+                sample.point
+
+                    .clone()
+
+                    .addScaledVector(
+
+                        sample.side,
+
+                        offset
+
+                    );
+
+            position.y +=
+
+                heightFunction(
+
+                    offset,
+
+                    sample,
+
+                    rowProgress
+
+                );
+
+            positions.push(
+
+                position.x,
+
+                position.y,
+
+                position.z
+
+            );
+
+            uvs.push(
+
+                horizontal *
+
+                4,
+
+                rowProgress *
+
+                24
+
+            );
+
+        }
+
+    }
+
+    for (
+
+        let row = 0;
+
+        row < rowCount;
+
+        row++
+
+    ) {
+
+        for (
+
+            let column = 0;
+
+            column <
+
+                lateralSegments;
+
+            column++
+
+        ) {
+
+            const first =
+
+                row *
+
+                (
+
+                    lateralSegments +
+
+                    1
+
+                ) +
+
+                column;
+
+            const second =
+
+                first +
+
+                1;
+
+            const third =
+
+                first +
+
+                lateralSegments +
+
+                1;
+
+            const fourth =
+
+                third +
+
+                1;
+
+            indices.push(
+
+                first,
+
+                third,
+
+                second,
+
+                second,
+
+                third,
+
+                fourth
+
+            );
+
+        }
+
+    }
+
+    const geometry =
+
+        new THREE.BufferGeometry();
+
+    geometry.setAttribute(
+
+        "position",
+
+        new THREE.Float32BufferAttribute(
+
+            positions,
+
+            3
+
+        )
+
+    );
+
+    geometry.setAttribute(
+
+        "uv",
+
+        new THREE.Float32BufferAttribute(
+
+            uvs,
+
+            2
+
+        )
+
+    );
+
+    geometry.setIndex(
+
+        indices
+
+    );
+
+    geometry.computeVertexNormals();
+
+    const mesh =
+
+        new THREE.Mesh(
+
+            geometry,
+
+            material
+
+        );
+
+    mesh.receiveShadow =
+
+        true;
+
+    this.scene.add(
+
+        mesh
+
+    );
+
+}
+
+
+// ============================================================================
+// 道路
+// ============================================================================
+
+createRoad() {
+
+    const areaRoads = [
+
+        {
+
+            start:
+                0,
+
+            end:
+                0.28,
+
+            material:
+                new THREE.MeshStandardMaterial({
+
+                    map:
+                        this.textures.asphalt,
+
+                    color:
+                        0x4f5559,
+
+                    roughness:
+                        1
+
+                })
+
+        },
+
+        {
+
+            start:
+                0.28,
+
+            end:
+                0.56,
+
+            material:
+                new THREE.MeshStandardMaterial({
+
+                    map:
+                        this.textures.grass,
+
+                    color:
+                        0x748650,
+
+                    roughness:
+                        1
+
+                })
+
+        },
+
+        {
+
+            start:
+                0.56,
+
+            end:
+                0.82,
+
+            material:
+                new THREE.MeshStandardMaterial({
+
+                    map:
+                        this.textures.rock,
+
+                    color:
+                        0x756d65,
+
+                    roughness:
+                        1
+
+                })
+
+        },
+
+        {
+
+            start:
+                0.82,
+
+            end:
+                1,
+
+            material:
+                new THREE.MeshStandardMaterial({
+
+                    map:
+                        this.textures.dirt,
+
+                    color:
+                        0x7d5d42,
+
+                    roughness:
+                        1
+
+                })
+
+        }
+
+    ];
+
+    for (
+
+        const road of
+
+        areaRoads
+
+    ) {
+
+        this.createRoadRibbon(
+
+            road.start,
+
+            road.end,
+
+            road.material
+
+        );
+
+    }
+
+}
+
+
+// ============================================================================
+// 道路帯生成
+// ============================================================================
+
+createRoadRibbon(
+
+    startProgress,
+
+    endProgress,
+
+    material
+
+) {
+
+    const startIndex =
+
+        Math.floor(
+
+            startProgress *
+
+            this.sampleCount
+
+        );
+
+    const endIndex =
+
+        Math.ceil(
+
+            endProgress *
+
+            this.sampleCount
+
+        );
+
+    const rowCount =
+
+        endIndex -
+
+        startIndex;
+
+    const positions = [];
+
+    const uvs = [];
+
+    const indices = [];
+
+    for (
+
+        let index =
+
+            startIndex;
+
+        index <=
+
+            endIndex;
+
+        index++
+
+    ) {
+
+        const sample =
+
+            this.samples[index];
+
+        const rowProgress =
+
+            rowCount > 0
+
+                ? (
+
+                    index -
+
+                    startIndex
+
+                ) /
+
+                rowCount
+
+                : 0;
+
+        for (
+
+            const offset of [
+
+                -this.roadHalfWidth,
+
+                this.roadHalfWidth
+
+            ]
+
+        ) {
+
+            const position =
+
+                sample.point
+
+                    .clone()
+
+                    .addScaledVector(
+
+                        sample.side,
+
+                        offset
+
+                    );
+
+            position.y +=
+
+                0.08;
+
+            positions.push(
+
+                position.x,
+
+                position.y,
+
+                position.z
+
+            );
+
+        }
+
+        uvs.push(
+
+            0,
+
+            rowProgress *
+
+            24,
+
+            1,
+
+            rowProgress *
+
+            24
+
+        );
+
+    }
+
+    for (
+
+        let row = 0;
+
+        row < rowCount;
+
+        row++
+
+    ) {
+
+        const first =
+
+            row *
+
+            2;
+
+        const second =
+
+            first +
+
+            1;
+
+        const third =
+
+            first +
+
+            2;
+
+        const fourth =
+
+            first +
+
+            3;
+
+        indices.push(
+
+            first,
+
+            third,
+
+            second,
+
+            second,
+
+            third,
+
+            fourth
+
+        );
+
+    }
+
+    const geometry =
+
+        new THREE.BufferGeometry();
+
+    geometry.setAttribute(
+
+        "position",
+
+        new THREE.Float32BufferAttribute(
+
+            positions,
+
+            3
+
+        )
+
+    );
+
+    geometry.setAttribute(
+
+        "uv",
+
+        new THREE.Float32BufferAttribute(
+
+            uvs,
+
+            2
+
+        )
+
+    );
+
+    geometry.setIndex(
+
+        indices
+
+    );
+
+    geometry.computeVertexNormals();
+
+    const mesh =
+
+        new THREE.Mesh(
+
+            geometry,
+
+            material
+
+        );
+
+    mesh.receiveShadow =
+
+        true;
+
+    this.scene.add(
+
+        mesh
+
+    );
+
+}
+
+
+// ============================================================================
+// 道路左右の白線
+// ============================================================================
+
+createRoadEdges() {
+
+    const material =
+
+        new THREE.MeshBasicMaterial({
+
+            color:
+                0xf5f4ef,
+
+            toneMapped:
+                false
+
+        });
+
+    for (
+
+        const sideOffset of [
+
+            -this.roadHalfWidth,
+
+            this.roadHalfWidth
+
+        ]
+
+    ) {
+
+        const positions = [];
+
+        const indices = [];
+
+        for (
+
+            let index = 0;
+
+            index <=
+
+                this.sampleCount;
+
+            index++
+
+        ) {
+
+            const sample =
+
+                this.samples[index];
+
+            const inner =
+
+                sample.point
+
+                    .clone()
+
+                    .addScaledVector(
+
+                        sample.side,
+
+                        sideOffset -
+
+                        0.06
+
+                    );
+
+            const outer =
+
+                sample.point
+
+                    .clone()
+
+                    .addScaledVector(
+
+                        sample.side,
+
+                        sideOffset +
+
+                        0.06
+
+                    );
+
+            inner.y +=
+
+                0.105;
+
+            outer.y +=
+
+                0.105;
+
+            positions.push(
+
+                inner.x,
+
+                inner.y,
+
+                inner.z,
+
+                outer.x,
+
+                outer.y,
+
+                outer.z
+
+            );
+
+        }
+
+        for (
+
+            let row = 0;
+
+            row <
+
+                this.sampleCount;
+
+            row++
+
+        ) {
+
+            const first =
+
+                row *
+
+                2;
+
+            const second =
+
+                first +
+
+                1;
+
+            const third =
+
+                first +
+
+                2;
+
+            const fourth =
+
+                first +
+
+                3;
+
+            indices.push(
+
+                first,
+
+                third,
+
+                second,
+
+                second,
+
+                third,
+
+                fourth
+
+            );
+
+        }
+
+        const geometry =
+
+            new THREE.BufferGeometry();
+
+        geometry.setAttribute(
+
+            "position",
+
+            new THREE.Float32BufferAttribute(
+
+                positions,
+
+                3
+
+            )
+
+        );
+
+        geometry.setIndex(
+
+            indices
+
+        );
+
+        geometry.computeVertexNormals();
+
+        this.scene.add(
+
+            new THREE.Mesh(
+
+                geometry,
+
+                material
+
+            )
+
+        );
+
+    }
+
+}
+
+
+// ============================================================================
+// 川・橋
+// ============================================================================
+
+createRiverBridge() {
+
+    const riverPose =
+
+        this.getPose(
+
+            0.405,
+
+            0
+
+        );
+
+    const riverCenter =
+
+        riverPose.position.clone();
+
+    this.riverSystem.build(
+
+        riverCenter,
+
+        230
+
+    );
+
+    this.riverSystem.group.rotation.y =
+
+        Math.atan2(
+
+            riverPose.side.x,
+
+            riverPose.side.z
+
+        );
+
+    this.bridgeBuilder.build(
+
+        riverCenter
+
+    );
+
+    this.bridgeBuilder.group.rotation.y =
+
+        riverPose.heading;
+
+}
+
+
+// ============================================================================
+// トンネル
+// ============================================================================
+
+createTunnelArea() {
+
+    const tunnelPose =
+
+        this.getPose(
+
+            0.61,
+
+            0
+
+        );
+
+    this.tunnelBuilder.build(
+
+        tunnelPose.position
+
+    );
+
+    this.tunnelBuilder.group.rotation.y =
+
+        tunnelPose.heading;
+
+}
+
+
+// ============================================================================
+// 道沿い植生
+// ============================================================================
+
+createVegetation() {
+
+    this.vegetation
+        .createRoadsideVegetation(
+
+            this,
+
+            {
+
+                treeCount:
+                    72,
+
+                grassCount:
+                    240,
+
+                treeMinDistance:
+                    this.roadHalfWidth +
+                    4,
+
+                treeMaxDistance:
+                    this.roadHalfWidth +
+                    16,
+
+                grassMinDistance:
+                    this.roadHalfWidth +
+                    1.8,
+
+                grassMaxDistance:
+                    this.roadHalfWidth +
+                    8,
+
+                startProgress:
+                    0.025,
+
+                endProgress:
+                    0.94,
+
+                seed:
+                    1827
+
+            }
+
+        );
+
+}
+
+
+// ============================================================================
+// ゴールキャンプ場
+// ============================================================================
+
+createCampArea() {
+
+    const campPose =
+
+        this.getPose(
+
+            0.965,
+
+            -18
+
+        );
+
+    this.campBuilder.build(
+
+        campPose.position
+
+    );
+
+    this.campBuilder.group.rotation.y =
+
+        campPose.heading -
+
+        0.3;
+
+    this.peopleBuilder.build(
+
+        campPose.position
+
+    );
+
+    this.peopleBuilder.group.rotation.y =
+
+        campPose.heading -
+
+        0.3;
+
+}
+
+
+// ============================================================================
+// ゴール判定領域
+// ============================================================================
+
+createGoalTrigger() {
+
+    const pose =
+
+        this.getPose(
+
+            0.992,
+
+            0
+
+        );
+
+    this.goalTrigger =
+
+        new THREE.Box3()
+
+            .setFromCenterAndSize(
+
+                pose.position.clone(),
+
+                new THREE.Vector3(
+
+                    20,
+
+                    8,
+
+                    20
+
+                )
+
+            );
+
+}
+
+
+// ============================================================================
+// 植生配置禁止判定
+// ============================================================================
+
+isDecorationPositionBlocked(
+
+    position,
+
+    type
+
+) {
+
+    const riverCenter =
+
+        this.getPose(
+
+            0.405,
+
+            0
+
+        ).position;
+
+    const tunnelCenter =
+
+        this.getPose(
+
+            0.61,
+
+            0
+
+        ).position;
+
+    const campCenter =
+
+        this.getPose(
+
+            0.965,
+
+            -18
+
+        ).position;
+
+    if (
+
+        position.distanceTo(
+
+            riverCenter
+
+        ) < 32
+
+    ) {
+
+        return true;
+
+    }
+
+    if (
+
+        position.distanceTo(
+
+            tunnelCenter
+
+        ) < 38
+
+    ) {
+
+        return true;
+
+    }
+
+    if (
+
+        position.distanceTo(
+
+            campCenter
+
+        ) < 32
+
+    ) {
+
+        return true;
+
+    }
+
+    return false;
+
+}
+
+
+// ============================================================================
+// 毎フレーム更新
+// ============================================================================
+
+update(
+
+    delta,
+
+    vehicle
+
+) {
+
+    this.riverSystem.update(
+
+        delta
+
+    );
+
+    if (
+
+        !vehicle ||
+
+        this.goalReached
+
+    ) {
+
+        return;
+
+    }
+
+    if (
+
+        this.goalTrigger &&
+
+        this.goalTrigger.containsPoint(
+
+            vehicle.root.position
+
+        )
+
+    ) {
+
+        this.goalReached =
+
+            true;
+
+        vehicle.checkGoal?.(
+
+            delta
+
+        );
+
+    }
+
+}
+
+
+// ============================================================================
+// リスタート
+// ============================================================================
+
+reset() {
+
+    this.goalReached =
+
+        false;
+
+    this.startTime =
+
+        performance.now();
+
+}
