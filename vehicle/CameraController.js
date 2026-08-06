@@ -1,224 +1,154 @@
 // ============================================================================
 // vehicle/CameraController.js
-// Part 1
-// カメラ改善版
-// ・車の揺れに追従しない
-// ・カクつき解消
-// ・右スティック対応準備
+// V11
+// カメラ
+// ・通常追従
+// ・酔い防止
+// ・ゴール後フリーカメラ
 // ============================================================================
 
 import * as THREE from "three";
 
-export default class CameraController {
+export default class CameraController{
 
-    constructor(camera, vehicle) {
+    constructor(camera,vehicle){
 
-        this.camera = camera;
+        this.camera=camera;
 
-        this.vehicle = vehicle;
+        this.vehicle=vehicle;
 
-        this.distance = 8.5;
+        this.freeLook=false;
 
-        this.height = 3.2;
+        this.distance=9.5;
 
-        this.lookHeight = 1.2;
+        this.height=3.6;
 
-        this.smoothPosition = new THREE.Vector3();
+        this.lookHeight=1.4;
 
-        this.smoothLook = new THREE.Vector3();
-
-        this.yaw = 0;
-
-        this.pitch = 0.18;
-
-        this.freeLook = false;
-
-        this.rotateSpeed = 2.2;
-
-        this.minPitch = -0.18;
-
-        this.maxPitch = 0.52;
-
-        this.initialized = false;
+        this.target=new THREE.Vector3();
 
     }
 
     //=========================================================================
-    // 毎フレーム
+    // フリーカメラ
     //=========================================================================
 
-    update(delta) {
+    enableFreeLook(){
 
-        if (!this.vehicle.root) return;
+        this.freeLook=true;
 
-        //------------------------------------
-        // 車体位置
-        //------------------------------------
+    }
 
-        const base =
+    disableFreeLook(){
 
-            this.vehicle.root.position.clone();
+        this.freeLook=false;
 
-        //------------------------------------
-        // 車体の向きだけ使う
-        // サスペンションの揺れは無視
-        //------------------------------------
+    }
 
-        if (!this.freeLook) {
+    //=========================================================================
+    // 更新
+    //=========================================================================
 
-            this.yaw =
+    update(delta){
 
-                this.vehicle.heading;
+        if(this.freeLook){
+
+            this.updateFree(delta);
+
+            return;
 
         }
 
-        //------------------------------------
-        // カメラ位置
-        //------------------------------------
+        //--------------------------------
+        // 車の向き
+        //--------------------------------
 
-        const offset =
+        const angle=
+
+            this.vehicle.heading;
+
+        const targetPos=
+
+            this.vehicle.root.position;
+
+        //--------------------------------
+        // カメラ位置
+        //--------------------------------
+
+        const desired=
 
             new THREE.Vector3(
 
-                Math.sin(this.yaw) * this.distance,
+                targetPos.x-
+
+                Math.sin(angle)*
+
+                this.distance,
+
+                targetPos.y+
 
                 this.height,
 
-                Math.cos(this.yaw) * this.distance
+                targetPos.z-
+
+                Math.cos(angle)*
+
+                this.distance
 
             );
 
-        offset.multiplyScalar(-1);
+        //--------------------------------
+        // ★酔い防止
+        // 車の細かい揺れは追従しない
+        //--------------------------------
 
-        const targetPosition =
+        this.camera.position.lerp(
 
-            base.clone().add(offset);
+            desired,
 
-        //------------------------------------
+            delta*3.5
+
+        );
+
+        //--------------------------------
         // 注視点
-        //------------------------------------
+        //--------------------------------
 
-        const targetLook =
+        this.target.set(
 
-            base.clone();
+            targetPos.x,
 
-        targetLook.y +=
+            targetPos.y+
 
-            this.lookHeight;
+            this.lookHeight,
 
-        //------------------------------------
-        // 初回
-        //------------------------------------
-
-        if (!this.initialized) {
-
-            this.initialized = true;
-
-            this.smoothPosition.copy(
-
-                targetPosition
-
-            );
-
-            this.smoothLook.copy(
-
-                targetLook
-
-            );
-
-        }
-
-        //------------------------------------
-        // スムージング
-        //------------------------------------
-
-        this.smoothPosition.lerp(
-
-            targetPosition,
-
-            1 -
-
-            Math.exp(
-
-                -delta * 7
-
-            )
-
-        );
-
-        this.smoothLook.lerp(
-
-            targetLook,
-
-            1 -
-
-            Math.exp(
-
-                -delta * 10
-
-            )
-
-        );
-
-        //------------------------------------
-        // 適用
-        //------------------------------------
-
-        this.camera.position.copy(
-
-            this.smoothPosition
+            targetPos.z
 
         );
 
         this.camera.lookAt(
 
-            this.smoothLook
+            this.target
 
         );
 
     }
 
     //=========================================================================
-    // 右スティック用
+    // ゴール後
     //=========================================================================
 
-    rotate(dx, dy) {
+    updateFree(delta){
 
-        this.freeLook = true;
+        if(this.dragging)
 
-        this.yaw -=
+            return;
 
-            dx *
+        this.camera.lookAt(
 
-            this.rotateSpeed;
+            this.vehicle.root.position
 
-        this.pitch +=
-
-            dy *
-
-            this.rotateSpeed;
-
-        this.pitch =
-
-            THREE.MathUtils.clamp(
-
-                this.pitch,
-
-                this.minPitch,
-
-                this.maxPitch
-
-            );
-
-    }
-
-    //=========================================================================
-    // 車の後ろへ戻す
-    //=========================================================================
-
-    resetBehindVehicle() {
-
-        this.freeLook = false;
+        );
 
     }
 
